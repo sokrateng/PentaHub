@@ -26,4 +26,6 @@ public class Project : BaseEntity
     public ICollection<TaskStage> TaskStages { get; set; } = new List<TaskStage>();
     public ICollection<ProjectTask> Tasks { get; set; } = new List<ProjectTask>();
     public ICollection<Sprint> Sprints { get; set; } = new List<Sprint>();
+    public ICollection<Milestone> Milestones { get; set; } = new List<Milestone>();
+    public ICollection<ResourceAllocation> ResourceAllocations { get; set; } = new List<ResourceAllocation>();
 }

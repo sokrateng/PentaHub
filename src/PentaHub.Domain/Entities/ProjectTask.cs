@@ -36,4 +36,7 @@ public class ProjectTask : BaseEntity
     public ICollection<TaskDependency> Dependencies { get; set; } = new List<TaskDependency>();
     public ICollection<TaskDependency> Dependents { get; set; } = new List<TaskDependency>();
     public ICollection<TaskChecklist> Checklists { get; set; } = new List<TaskChecklist>();
+    public ICollection<TimeSheet> TimeSheets { get; set; } = new List<TimeSheet>();
+    public ICollection<ResourceAllocation> ResourceAllocations { get; set; } = new List<ResourceAllocation>();
+    public Milestone? Milestone { get; set; }
 }

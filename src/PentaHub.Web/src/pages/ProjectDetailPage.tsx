@@ -29,6 +29,7 @@ import { Separator } from '@/components/ui/separator';
 import { projectsApi, usersApi } from '@/services/api';
 import { ProjectStatus, PrivacyLevel, EvaluationType } from '@/types';
 import type { CreateProjectRequest } from '@/types';
+import { MilestonesTab } from '@/components/projects/MilestonesTab';
 
 interface MetricItem {
   label: string;
@@ -431,8 +432,13 @@ export function ProjectDetailPage() {
             </div>
           </TabsContent>
 
+          {/* Kilometre Taşları tab */}
+          <TabsContent value="Kilometre Taşları" className="mt-5">
+            <MilestonesTab projectId={projectId} />
+          </TabsContent>
+
           {/* Placeholder tabs */}
-          {tabItems.slice(1).map((tab) => (
+          {tabItems.slice(1).filter((tab) => tab !== 'Kilometre Taşları').map((tab) => (
             <TabsContent key={tab} value={tab} className="mt-5">
               <div className="bg-white rounded-xl border border-border p-12 flex flex-col items-center justify-center text-center">
                 <Badge variant="outline" className="mb-3 text-xs">

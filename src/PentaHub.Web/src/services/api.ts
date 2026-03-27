@@ -16,6 +16,13 @@ import type {
   TaskChecklistItem,
   TaskDependencyItem,
   GanttTask,
+  ResourceAllocation,
+  CreateResourceAllocationRequest,
+  Milestone,
+  CreateMilestoneRequest,
+  UpdateMilestoneRequest,
+  TimeSheet,
+  CreateTimeSheetRequest,
 } from '@/types';
 
 const api = axios.create({ baseURL: '/api' });
@@ -185,6 +192,61 @@ export const dependencyApi = {
 export const ganttApi = {
   getByProject: async (projectId: number) => {
     const { data } = await api.get<ApiResponse<GanttTask[]>>(`/projects/${projectId}/gantt`);
+    return data;
+  },
+};
+
+export const resourcesApi = {
+  getByProject: async (projectId: number) => {
+    const { data } = await api.get<ApiResponse<ResourceAllocation[]>>(`/projects/${projectId}/resources`);
+    return data;
+  },
+  create: async (resource: CreateResourceAllocationRequest) => {
+    const { data } = await api.post<ApiResponse<ResourceAllocation>>('/resources', resource);
+    return data;
+  },
+  delete: async (id: number) => {
+    const { data } = await api.delete<ApiResponse<boolean>>(`/resources/${id}`);
+    return data;
+  },
+};
+
+export const milestonesApi = {
+  getByProject: async (projectId: number) => {
+    const { data } = await api.get<ApiResponse<Milestone[]>>(`/projects/${projectId}/milestones`);
+    return data;
+  },
+  create: async (milestone: CreateMilestoneRequest) => {
+    const { data } = await api.post<ApiResponse<Milestone>>('/milestones', milestone);
+    return data;
+  },
+  update: async (id: number, milestone: UpdateMilestoneRequest) => {
+    const { data } = await api.put<ApiResponse<Milestone>>(`/milestones/${id}`, milestone);
+    return data;
+  },
+  delete: async (id: number) => {
+    const { data } = await api.delete<ApiResponse<boolean>>(`/milestones/${id}`);
+    return data;
+  },
+};
+
+export const timeSheetsApi = {
+  getByTask: async (taskId: number) => {
+    const { data } = await api.get<ApiResponse<TimeSheet[]>>(`/tasks/${taskId}/timesheets`);
+    return data;
+  },
+  getByUser: async (userId: number, startDate?: string, endDate?: string) => {
+    const { data } = await api.get<ApiResponse<TimeSheet[]>>(`/users/${userId}/timesheets`, {
+      params: { startDate, endDate },
+    });
+    return data;
+  },
+  create: async (timeSheet: CreateTimeSheetRequest) => {
+    const { data } = await api.post<ApiResponse<TimeSheet>>('/timesheets', timeSheet);
+    return data;
+  },
+  delete: async (id: number) => {
+    const { data } = await api.delete<ApiResponse<boolean>>(`/timesheets/${id}`);
     return data;
   },
 };

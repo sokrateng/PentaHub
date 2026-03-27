@@ -220,3 +220,78 @@ export interface GanttTask {
   stageName?: string;
   dependencies: { dependsOnTaskId: number; dependencyType: number }[];
 }
+
+// --- FAZ 2B: Resource Allocation ---
+
+export interface ResourceAllocation {
+  id: number;
+  userId: number;
+  userName: string;
+  projectId: number;
+  projectName: string;
+  taskId?: number;
+  taskTitle?: string;
+  startDate: string;
+  endDate: string;
+  hoursPerDay: number;
+  totalHours: number;
+  notes?: string;
+}
+
+export interface CreateResourceAllocationRequest {
+  userId: number;
+  projectId: number;
+  taskId?: number;
+  startDate: string;
+  endDate: string;
+  hoursPerDay: number;
+  totalHours: number;
+  notes?: string;
+}
+
+// --- FAZ 2C: Milestones ---
+
+export interface Milestone {
+  id: number;
+  projectId: number;
+  name: string;
+  targetDate?: string;
+  sortOrder: number;
+  taskCount: number;
+}
+
+export interface CreateMilestoneRequest {
+  name: string;
+  projectId: number;
+  targetDate?: string;
+  sortOrder?: number;
+}
+
+export interface UpdateMilestoneRequest {
+  name: string;
+  targetDate?: string;
+  sortOrder?: number;
+}
+
+// --- FAZ 2C: Time Sheets ---
+
+export interface TimeSheet {
+  id: number;
+  userId: number;
+  userName: string;
+  taskId: number;
+  taskTitle: string;
+  date: string;
+  hours: number;
+  description?: string;
+  isBillable: boolean;
+}
+
+export interface CreateTimeSheetRequest {
+  userId: number;
+  taskId: number;
+  date: string;
+  hours: number;
+  description?: string;
+  isBillable: boolean;
+}

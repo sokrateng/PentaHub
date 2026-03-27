@@ -9,6 +9,7 @@ import { SprintsPage } from '@/pages/SprintsPage';
 import { SprintDetailPage } from '@/pages/SprintDetailPage';
 import { BacklogPage } from '@/pages/BacklogPage';
 import { GanttPage } from '@/pages/GanttPage';
+import { ResourcesPage } from '@/pages/ResourcesPage';
 import { PlaceholderPage } from '@/pages/PlaceholderPage';
 
 const queryClient = new QueryClient({
@@ -37,7 +38,7 @@ function App() {
             <Route path="/sprints" element={<SprintsPage />} />
             <Route path="/sprints/:id" element={<SprintDetailPage />} />
             <Route path="/backlog" element={<BacklogPage />} />
-            <Route path="/resources" element={<PlaceholderPage />} />
+            <Route path="/resources" element={<ResourcesPage />} />
             <Route path="*" element={<Navigate to="/projects" replace />} />
           </Route>
         </Routes>

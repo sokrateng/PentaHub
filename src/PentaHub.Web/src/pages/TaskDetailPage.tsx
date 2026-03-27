@@ -24,6 +24,7 @@ import { Separator } from '@/components/ui/separator';
 import { tasksApi, taskStagesApi, usersApi } from '@/services/api';
 import { ChecklistTab } from '@/components/tasks/ChecklistTab';
 import { DependenciesTab } from '@/components/tasks/DependenciesTab';
+import { TimeSheetsTab } from '@/components/tasks/TimeSheetsTab';
 import type { TaskStage } from '@/types';
 
 const PRIORITY_LABELS: Record<number, string> = {
@@ -447,15 +448,14 @@ export function TaskDetailPage() {
             </div>
           </TabsContent>
 
-          {/* Zaman Çizelgeleri placeholder */}
+          {/* Zaman Çizelgeleri */}
           <TabsContent value="Zaman Çizelgeleri" className="mt-4">
-            <div className="bg-white rounded-xl border border-border p-12 flex flex-col items-center justify-center text-center">
-              <Badge variant="outline" className="mb-3 text-xs">
-                Yakında
-              </Badge>
-              <h3 className="text-base font-semibold text-foreground mb-1">Zaman Çizelgeleri</h3>
-              <p className="text-sm text-muted-foreground">Bu bölüm yakında eklenecek (Faz 2C)</p>
-            </div>
+            <TimeSheetsTab
+              taskId={taskId}
+              plannedHours={task.plannedHours}
+              spentHours={task.spentHours}
+              remainingHours={task.remainingHours}
+            />
           </TabsContent>
 
           {/* Kontrol Listesi */}
