@@ -14,6 +14,13 @@ import {
   Mail,
   FileWarning,
   Sparkles,
+  CheckSquare,
+  Square,
+  TrendingUp,
+  TrendingDown,
+  Minus,
+  ClipboardList,
+  Info,
 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -24,7 +31,6 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
 } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import {
@@ -57,9 +63,48 @@ const statusStages = [
   { value: ProjectStatus.Tamamlandi, label: 'Tamamlandı' },
 ];
 
+const privacyLabels: Record<number, string> = {
+  [PrivacyLevel.InviteOnly]: 'Sadece Davetliler',
+  [PrivacyLevel.AllEmployees]: 'Tüm Çalışanlar',
+  [PrivacyLevel.ClientVisible]: 'Müşteriye Görünür',
+};
+
+const evaluationLabels: Record<number, string> = {
+  [EvaluationType.None]: 'Yok',
+  [EvaluationType.Periodic]: 'Periyodik',
+  [EvaluationType.OnStageChange]: 'Aşama Değişiminde',
+};
+
+const handoverChecklistItems = [
+  'Tüm görevler tamamlandı veya devredildi',
+  'Dokümantasyon güncellendi',
+  'Test sonuçları onaylandı',
+  'Müşteri kabul testi yapıldı',
+  'Bilgi transferi toplantısı gerçekleştirildi',
+  'Erişim yetkileri devredildi',
+  'Açık riskler dokümante edildi',
+  'Bakım planı oluşturuldu',
+];
+
 function formatDateForInput(dateStr?: string): string {
   if (!dateStr) return '';
   return dateStr.split('T')[0];
+}
+
+function formatDate(dateStr?: string): string {
+  if (!dateStr) return '—';
+  return new Date(dateStr).toLocaleDateString('tr-TR', {
+    day: '2-digit',
+    month: 'long',
+    year: 'numeric',
+  });
+}
+
+interface RiskCategory {
+  label: string;
+  severity: 'Düşük' | 'Orta' | 'Yüksek';
+  description: string;
+  recommendation: string;
 }
 
 export function ProjectDetailPage() {
@@ -100,6 +145,10 @@ export function ProjectDetailPage() {
   const [activeTab, setActiveTab] = useState('Ayarlar');
   const [descriptionValue, setDescriptionValue] = useState<string | null>(null);
   const [emailValue, setEmailValue] = useState<string | null>(null);
+  const [handoverChecked, setHandoverChecked] = useState<boolean[]>(
+    new Array(handoverChecklistItems.length).fill(false)
+  );
+  const [handoverNotes, setHandoverNotes] = useState('');
 
   const updateMutation = useMutation({
     mutationFn: (payload: CreateProjectRequest) => projectsApi.update(projectId, payload),
@@ -164,6 +213,151 @@ export function ProjectDetailPage() {
       evaluationFrequency: currentField('evaluationFrequency') as string | undefined,
     };
     updateMutation.mutate(payload);
+  };
+
+  // --- AI Analysis helpers ---
+  const taskCount = metrics?.taskCount ?? 0;
+  const overdueCount = metrics?.overdueTaskCount ?? 0;
+  const completedCount = metrics?.completedTaskCount ?? 0;
+  const activeCount = metrics?.activeTaskCount ?? 0;
+  const resourceCount = metrics?.resourceCount ?? 0;
+
+  const completionRate = taskCount > 0 ? Math.round((completedCount / taskCount) * 100) : 0;
+  const overdueRate = taskCount > 0 ? Math.round((overdueCount / taskCount) * 100) : 0;
+
+  const startDate = project.startDate ? new Date(project.startDate) : null;
+  const endDate = project.endDate ? new Date(project.endDate) : null;
+  const now = new Date();
+
+  let timeUsedPercent = 0;
+  if (startDate && endDate) {
+    const total = endDate.getTime() - startDate.getTime();
+    const elapsed = now.getTime() - startDate.getTime();
+    timeUsedPercent = total > 0 ? Math.min(100, Math.round((elapsed / total) * 100)) : 0;
+  }
+
+  const timeRisk: RiskCategory = {
+    label: 'Zaman Riski',
+    severity:
+      timeUsedPercent > completionRate + 30
+        ? 'Yüksek'
+        : timeUsedPercent > completionRate + 15
+        ? 'Orta'
+        : 'Düşük',
+    description:
+      endDate
+        ? `Zamanın %${timeUsedPercent}'i kullanıldı, ilerleme %${completionRate}.`
+        : 'Bitiş tarihi tanımlanmamış.',
+    recommendation:
+      timeUsedPercent > completionRate + 30
+        ? 'Proje ciddi ölçüde geride. Görevlerin önceliklendirilmesi gerekiyor.'
+        : timeUsedPercent > completionRate + 15
+        ? 'Proje biraz geride. Kaynaklar gözden geçirilmeli.'
+        : 'Proje zamanında ilerliyor.',
+  };
+
+  const resourceRisk: RiskCategory = {
+    label: 'Kaynak Riski',
+    severity: resourceCount === 0 ? 'Yüksek' : resourceCount < 2 ? 'Orta' : 'Düşük',
+    description:
+      resourceCount === 0
+        ? 'Projeye hiç kaynak atanmamış.'
+        : `${resourceCount} kaynak atanmış.`,
+    recommendation:
+      resourceCount === 0
+        ? 'Projeye en az bir kaynak atanmalı.'
+        : resourceCount < 2
+        ? 'Kaynak sayısı artırılabilir.'
+        : 'Kaynak durumu iyi.',
+  };
+
+  const scopeRisk: RiskCategory = {
+    label: 'Kapsam Riski',
+    severity: activeCount > 20 ? 'Yüksek' : activeCount > 10 ? 'Orta' : 'Düşük',
+    description:
+      activeCount === 0
+        ? 'Aktif görev bulunmuyor.'
+        : `${activeCount} aktif görev mevcut.`,
+    recommendation:
+      activeCount > 20
+        ? 'Çok fazla açık görev var. Kapsam daraltılmalı veya ekip genişletilmeli.'
+        : activeCount > 10
+        ? 'Açık görev sayısı fazla. Önceliklendirme yapılmalı.'
+        : 'Görev yükü yönetilebilir düzeyde.',
+  };
+
+  const qualityRisk: RiskCategory = {
+    label: 'Kalite Riski',
+    severity: overdueRate > 30 ? 'Yüksek' : overdueRate > 10 ? 'Orta' : 'Düşük',
+    description:
+      overdueCount === 0
+        ? 'Gecikmiş görev yok.'
+        : `${overdueCount} görev gecikmiş (${overdueRate}%).`,
+    recommendation:
+      overdueRate > 30
+        ? 'Yüksek gecikme oranı kaliteyi olumsuz etkileyebilir. Acil önlem gerekiyor.'
+        : overdueRate > 10
+        ? 'Gecikmiş görevler takip edilmeli.'
+        : 'Gecikme oranı kabul edilebilir.',
+  };
+
+  const riskCategories = [timeRisk, resourceRisk, scopeRisk, qualityRisk];
+
+  const highRiskCount = riskCategories.filter((r) => r.severity === 'Yüksek').length;
+  const mediumRiskCount = riskCategories.filter((r) => r.severity === 'Orta').length;
+  const riskScore = Math.min(10, highRiskCount * 3 + mediumRiskCount * 1.5 + (overdueRate / 20));
+  const riskScoreDisplay = Math.round(riskScore * 10) / 10;
+
+  const aiRecommendations: string[] = [];
+  if (overdueCount > 0) {
+    aiRecommendations.push(`${overdueCount} görev gecikmiş durumda. Önceliklendirme yapılmalı.`);
+  }
+  if (resourceCount === 0) {
+    aiRecommendations.push('Projeye kaynak atanmamış. En az bir kaynak belirlenmeli.');
+  }
+  if (timeUsedPercent > 75 && completionRate < 50) {
+    aiRecommendations.push(
+      `Proje zamanın %${timeUsedPercent}'ini kullanmış ama ilerleme %${completionRate}'nin altında.`
+    );
+  }
+  if (activeCount > 15) {
+    aiRecommendations.push('Çok sayıda açık görev var. Kapsam yönetimi gözden geçirilmeli.');
+  }
+  if (aiRecommendations.length === 0) {
+    aiRecommendations.push('Proje genel olarak iyi durumda. Mevcut tempoya devam edilebilir.');
+  }
+
+  // --- Handover helpers ---
+  const checkedCount = handoverChecked.filter(Boolean).length;
+  const handoverProgress = Math.round((checkedCount / handoverChecklistItems.length) * 100);
+
+  const toggleHandover = (index: number) => {
+    setHandoverChecked((prev) => {
+      const next = [...prev];
+      next[index] = !next[index];
+      return next;
+    });
+  };
+
+  // --- Display label helpers ---
+  const managerName = (() => {
+    const mid = formData.projectManagerId ?? project.projectManagerId;
+    return users.find((u) => u.id === mid)?.fullName ?? project.projectManagerName ?? '—';
+  })();
+
+  const privacyLabel = privacyLabels[formData.privacyLevel ?? project.privacyLevel] ?? '—';
+  const evaluationLabel = evaluationLabels[formData.customerEvaluation ?? project.customerEvaluation] ?? '—';
+
+  const severityColor = (severity: 'Düşük' | 'Orta' | 'Yüksek') => {
+    if (severity === 'Yüksek') return { bg: 'hsl(0 86% 97%)', border: 'hsl(0 72% 70%)', text: 'hsl(0 72% 51%)' };
+    if (severity === 'Orta') return { bg: 'hsl(38 92% 97%)', border: 'hsl(38 92% 60%)', text: 'hsl(38 92% 35%)' };
+    return { bg: 'hsl(153 60% 97%)', border: 'hsl(153 60% 60%)', text: 'hsl(153 60% 33%)' };
+  };
+
+  const severityIcon = (severity: 'Düşük' | 'Orta' | 'Yüksek') => {
+    if (severity === 'Yüksek') return <TrendingUp className="w-4 h-4" />;
+    if (severity === 'Orta') return <Minus className="w-4 h-4" />;
+    return <TrendingDown className="w-4 h-4" />;
   };
 
   return (
@@ -268,7 +462,7 @@ export function ProjectDetailPage() {
             const hasRisk = riskCount > 0;
             return (
               <div
-                className="rounded-lg border p-3 flex flex-col items-center gap-1 text-center transition-all"
+                className="rounded-lg border p-3 flex flex-col items-center gap-1 text-center transition-all relative group"
                 style={{
                   backgroundColor: hasRisk ? 'hsl(0 86% 97%)' : 'white',
                   borderColor: hasRisk ? 'hsl(0 72% 70%)' : 'hsl(var(--border))',
@@ -283,6 +477,11 @@ export function ProjectDetailPage() {
                   Riskler
                 </span>
                 <span className="text-[9px] text-muted-foreground leading-tight">{metrics?.overdueTaskCount ?? 0} gecikmiş</span>
+                {/* Tooltip */}
+                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-52 bg-foreground text-background text-[10px] rounded-md px-2 py-1.5 text-center opacity-0 group-hover:opacity-100 pointer-events-none z-10 leading-snug shadow-lg">
+                  <Info className="w-3 h-3 inline-block mr-1 mb-0.5" />
+                  Gecikmiş ve kritik öncelikli görevler otomatik olarak risk olarak sayılır.
+                </div>
               </div>
             );
           })()}
@@ -302,7 +501,7 @@ export function ProjectDetailPage() {
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1">
-          <TabsList className="flex h-auto bg-transparent border-b border-border rounded-none p-0 gap-0 w-full overflow-x-auto">
+          <TabsList className="flex flex-wrap h-auto bg-transparent border-b border-border rounded-none p-0 gap-0 w-full">
             {tabItems.map((tab) => (
               <TabsTrigger
                 key={tab}
@@ -344,13 +543,8 @@ export function ProjectDetailPage() {
                       setFormData((prev) => ({ ...prev, projectManagerId: Number(v) }))
                     }
                   >
-                    <SelectTrigger>
-                      <SelectValue>
-                        {(() => {
-                          const id = formData.projectManagerId ?? project.projectManagerId;
-                          return users.find((u) => u.id === id)?.fullName ?? project.projectManagerName ?? '—';
-                        })()}
-                      </SelectValue>
+                    <SelectTrigger className="w-full">
+                      <span className="flex flex-1 text-left text-sm truncate">{managerName}</span>
                     </SelectTrigger>
                     <SelectContent>
                       {users.map((u) => (
@@ -420,16 +614,8 @@ export function ProjectDetailPage() {
                       setFormData((prev) => ({ ...prev, privacyLevel: Number(v) as PrivacyLevel }))
                     }
                   >
-                    <SelectTrigger>
-                      <SelectValue>
-                        {(() => {
-                          const level = formData.privacyLevel ?? project.privacyLevel;
-                          if (level === PrivacyLevel.InviteOnly) return 'Sadece Davetliler';
-                          if (level === PrivacyLevel.AllEmployees) return 'Tüm Çalışanlar';
-                          if (level === PrivacyLevel.ClientVisible) return 'Müşteriye Görünür';
-                          return '—';
-                        })()}
-                      </SelectValue>
+                    <SelectTrigger className="w-full">
+                      <span className="flex flex-1 text-left text-sm truncate">{privacyLabel}</span>
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value={String(PrivacyLevel.InviteOnly)}>Sadece Davetliler</SelectItem>
@@ -451,16 +637,8 @@ export function ProjectDetailPage() {
                       }))
                     }
                   >
-                    <SelectTrigger>
-                      <SelectValue>
-                        {(() => {
-                          const evaluation = formData.customerEvaluation ?? project.customerEvaluation;
-                          if (evaluation === EvaluationType.None) return 'Yok';
-                          if (evaluation === EvaluationType.Periodic) return 'Periyodik';
-                          if (evaluation === EvaluationType.OnStageChange) return 'Aşama Değişiminde';
-                          return '—';
-                        })()}
-                      </SelectValue>
+                    <SelectTrigger className="w-full">
+                      <span className="flex flex-1 text-left text-sm truncate">{evaluationLabel}</span>
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value={String(EvaluationType.None)}>Yok</SelectItem>
@@ -709,38 +887,227 @@ export function ProjectDetailPage() {
 
           {/* Hand-over tab */}
           <TabsContent value="Hand-over" className="mt-5">
-            <div className="bg-white rounded-xl border border-border p-12 flex flex-col items-center justify-center text-center gap-4">
-              <div
-                className="w-14 h-14 rounded-2xl flex items-center justify-center"
-                style={{ backgroundColor: 'hsl(220 20% 96%)' }}
-              >
-                <FileWarning className="w-6 h-6 text-muted-foreground" />
+            <div className="space-y-4">
+              {/* Proje Özeti */}
+              <div className="bg-white rounded-xl border border-border p-6 space-y-4">
+                <div className="flex items-center gap-2">
+                  <ClipboardList className="w-4 h-4" style={{ color: 'hsl(153 60% 33%)' }} />
+                  <h3 className="text-sm font-semibold text-foreground">Proje Özeti</h3>
+                </div>
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div className="space-y-1">
+                    <span className="text-muted-foreground text-xs font-medium uppercase tracking-wide">Proje Adı</span>
+                    <p className="font-medium">{project.name}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <span className="text-muted-foreground text-xs font-medium uppercase tracking-wide">Yönetici</span>
+                    <p className="font-medium">{project.projectManagerName ?? '—'}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <span className="text-muted-foreground text-xs font-medium uppercase tracking-wide">Başlangıç</span>
+                    <p className="font-medium">{formatDate(project.startDate)}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <span className="text-muted-foreground text-xs font-medium uppercase tracking-wide">Bitiş</span>
+                    <p className="font-medium">{formatDate(project.endDate)}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <span className="text-muted-foreground text-xs font-medium uppercase tracking-wide">Durum</span>
+                    <p className="font-medium">{project.statusText}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <span className="text-muted-foreground text-xs font-medium uppercase tracking-wide">Toplam Görev</span>
+                    <p className="font-medium">{taskCount} görev ({completedCount} tamamlandı)</p>
+                  </div>
+                </div>
+                {project.description && (
+                  <div className="space-y-1">
+                    <span className="text-muted-foreground text-xs font-medium uppercase tracking-wide">Açıklama</span>
+                    <p className="text-sm text-foreground/80 leading-relaxed">{project.description}</p>
+                  </div>
+                )}
               </div>
-              <div className="space-y-1.5">
-                <h3 className="text-base font-semibold text-foreground">Hand-over Raporu Yok</h3>
-                <p className="text-sm text-muted-foreground max-w-sm">
-                  Hand-over raporu bu projede henüz oluşturulmamış. Bu özellik, proje teslim
-                  sürecinde otomatik rapor oluşturmak için kullanılacaktır.
+
+              {/* Teslim Durumu */}
+              <div className="bg-white rounded-xl border border-border p-6 space-y-3">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-semibold text-foreground">Teslim Durumu</h3>
+                  <span className="text-sm font-bold" style={{ color: 'hsl(153 60% 33%)' }}>
+                    %{handoverProgress}
+                  </span>
+                </div>
+                <div className="w-full bg-muted rounded-full h-2 overflow-hidden">
+                  <div
+                    className="h-2 rounded-full transition-all duration-300"
+                    style={{
+                      width: `${handoverProgress}%`,
+                      backgroundColor: 'hsl(153 60% 33%)',
+                    }}
+                  />
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {checkedCount} / {handoverChecklistItems.length} madde tamamlandı
                 </p>
+              </div>
+
+              {/* Teslim Kontrol Listesi */}
+              <div className="bg-white rounded-xl border border-border p-6 space-y-4">
+                <h3 className="text-sm font-semibold text-foreground">Teslim Kontrol Listesi</h3>
+                <div className="space-y-2">
+                  {handoverChecklistItems.map((item, index) => (
+                    <button
+                      key={index}
+                      onClick={() => toggleHandover(index)}
+                      className="w-full flex items-center gap-3 p-3 rounded-lg border border-border hover:bg-muted/30 text-left transition-colors"
+                      style={handoverChecked[index] ? { backgroundColor: 'hsl(153 60% 97%)', borderColor: 'hsl(153 60% 60%)' } : {}}
+                    >
+                      {handoverChecked[index] ? (
+                        <CheckSquare className="w-4 h-4 flex-shrink-0" style={{ color: 'hsl(153 60% 33%)' }} />
+                      ) : (
+                        <Square className="w-4 h-4 flex-shrink-0 text-muted-foreground" />
+                      )}
+                      <span
+                        className="text-sm"
+                        style={handoverChecked[index] ? { color: 'hsl(153 60% 33%)', textDecoration: 'line-through' } : {}}
+                      >
+                        {item}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Teslim Notları */}
+              <div className="bg-white rounded-xl border border-border p-6 space-y-4">
+                <h3 className="text-sm font-semibold text-foreground">Teslim Notları</h3>
+                <textarea
+                  value={handoverNotes}
+                  onChange={(e) => setHandoverNotes(e.target.value)}
+                  placeholder="Teslim sürecine ilişkin notlar, özel durumlar, hatırlatmalar..."
+                  className="w-full min-h-[120px] rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring resize-y"
+                />
+                <div className="flex justify-end">
+                  <Button
+                    onClick={() => alert('Rapor oluşturuldu')}
+                    className="gap-2"
+                    style={{ backgroundColor: 'hsl(153 60% 33%)', color: 'white' }}
+                  >
+                    <FileWarning className="w-4 h-4" />
+                    Teslim Raporu Oluştur
+                  </Button>
+                </div>
               </div>
             </div>
           </TabsContent>
 
           {/* AI Analysis tab */}
           <TabsContent value="AI Analysis" className="mt-5">
-            <div className="bg-white rounded-xl border border-border p-12 flex flex-col items-center justify-center text-center gap-4">
-              <div
-                className="w-14 h-14 rounded-2xl flex items-center justify-center"
-                style={{ backgroundColor: 'hsl(153 60% 96%)' }}
-              >
-                <Sparkles className="w-6 h-6" style={{ color: 'hsl(153 60% 33%)' }} />
+            <div className="space-y-4">
+              {/* Risk Skoru */}
+              <div className="bg-white rounded-xl border border-border p-6">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <Sparkles className="w-4 h-4" style={{ color: 'hsl(153 60% 33%)' }} />
+                      <h3 className="text-sm font-semibold text-foreground">Genel Risk Skoru</h3>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Görev gecikmeleri, kaynak durumu ve ilerleme oranına göre hesaplanır.
+                    </p>
+                  </div>
+                  <div className="flex flex-col items-center">
+                    <div
+                      className="w-16 h-16 rounded-full flex items-center justify-center text-2xl font-bold border-4"
+                      style={{
+                        borderColor:
+                          riskScoreDisplay >= 7
+                            ? 'hsl(0 72% 51%)'
+                            : riskScoreDisplay >= 4
+                            ? 'hsl(38 92% 50%)'
+                            : 'hsl(153 60% 33%)',
+                        color:
+                          riskScoreDisplay >= 7
+                            ? 'hsl(0 72% 51%)'
+                            : riskScoreDisplay >= 4
+                            ? 'hsl(38 92% 50%)'
+                            : 'hsl(153 60% 33%)',
+                      }}
+                    >
+                      {riskScoreDisplay}
+                    </div>
+                    <span className="text-xs text-muted-foreground mt-1">/ 10</span>
+                  </div>
+                </div>
               </div>
-              <div className="space-y-1.5">
-                <h3 className="text-base font-semibold text-foreground">AI Analizi Mevcut Değil</h3>
-                <p className="text-sm text-muted-foreground max-w-sm">
-                  AI destekli risk analizi bu projede henüz çalıştırılmamış. Bu özellik, proje
-                  risklerini yapay zeka ile analiz etmek için kullanılacaktır.
-                </p>
+
+              {/* Risk Kategorileri */}
+              <div className="grid grid-cols-2 gap-3">
+                {riskCategories.map((category) => {
+                  const colors = severityColor(category.severity);
+                  return (
+                    <div
+                      key={category.label}
+                      className="rounded-xl border p-4 space-y-2"
+                      style={{ backgroundColor: colors.bg, borderColor: colors.border }}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-semibold text-foreground">{category.label}</span>
+                        <span
+                          className="flex items-center gap-1 text-xs font-bold px-2 py-0.5 rounded-full"
+                          style={{ color: colors.text, backgroundColor: 'white' }}
+                        >
+                          {severityIcon(category.severity)}
+                          {category.severity}
+                        </span>
+                      </div>
+                      <p className="text-xs text-foreground/70 leading-snug">{category.description}</p>
+                      <p className="text-xs font-medium leading-snug" style={{ color: colors.text }}>
+                        {category.recommendation}
+                      </p>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Öneriler */}
+              <div className="bg-white rounded-xl border border-border p-6 space-y-4">
+                <div className="flex items-center gap-2">
+                  <Sparkles className="w-4 h-4" style={{ color: 'hsl(153 60% 33%)' }} />
+                  <h3 className="text-sm font-semibold text-foreground">AI Önerileri</h3>
+                </div>
+                <div className="space-y-2">
+                  {aiRecommendations.map((rec, index) => (
+                    <div
+                      key={index}
+                      className="flex items-start gap-3 p-3 rounded-lg bg-muted/40 border border-border"
+                    >
+                      <div
+                        className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 text-white text-[10px] font-bold mt-0.5"
+                        style={{ backgroundColor: 'hsl(153 60% 33%)' }}
+                      >
+                        {index + 1}
+                      </div>
+                      <p className="text-sm text-foreground/80 leading-relaxed">{rec}</p>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Metrics summary */}
+                <Separator />
+                <div className="grid grid-cols-3 gap-3 text-center">
+                  <div className="space-y-0.5">
+                    <p className="text-lg font-bold text-foreground">{completionRate}%</p>
+                    <p className="text-xs text-muted-foreground">Tamamlanma Oranı</p>
+                  </div>
+                  <div className="space-y-0.5">
+                    <p className="text-lg font-bold text-foreground">{overdueCount}</p>
+                    <p className="text-xs text-muted-foreground">Gecikmiş Görev</p>
+                  </div>
+                  <div className="space-y-0.5">
+                    <p className="text-lg font-bold text-foreground">{timeUsedPercent}%</p>
+                    <p className="text-xs text-muted-foreground">Süre Kullanımı</p>
+                  </div>
+                </div>
               </div>
             </div>
           </TabsContent>
