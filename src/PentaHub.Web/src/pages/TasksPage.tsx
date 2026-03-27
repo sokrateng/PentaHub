@@ -15,6 +15,7 @@ import {
   Star,
   User as UserIcon,
   Filter,
+  BarChart3,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -415,6 +416,16 @@ export function TasksPage() {
               ))}
             </SelectContent>
           </Select>
+
+          <Button
+            size="sm"
+            variant="outline"
+            className="h-8 gap-1.5 text-xs"
+            onClick={() => navigate(`/projects/${projectId}/gantt`)}
+          >
+            <BarChart3 className="w-3.5 h-3.5" />
+            Gantt
+          </Button>
 
           <Button
             size="sm"

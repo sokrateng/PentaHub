@@ -33,4 +33,7 @@ public class ProjectTask : BaseEntity
     public Sprint? Sprint { get; set; }
     public ProjectTask? ParentTask { get; set; }
     public ICollection<ProjectTask> SubTasks { get; set; } = new List<ProjectTask>();
+    public ICollection<TaskDependency> Dependencies { get; set; } = new List<TaskDependency>();
+    public ICollection<TaskDependency> Dependents { get; set; } = new List<TaskDependency>();
+    public ICollection<TaskChecklist> Checklists { get; set; } = new List<TaskChecklist>();
 }

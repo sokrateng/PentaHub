@@ -13,6 +13,9 @@ import type {
   Sprint,
   SprintDetail,
   CreateSprintRequest,
+  TaskChecklistItem,
+  TaskDependencyItem,
+  GanttTask,
 } from '@/types';
 
 const api = axios.create({ baseURL: '/api' });
@@ -141,6 +144,47 @@ export const sprintsApi = {
 export const backlogApi = {
   getByProject: async (projectId: number) => {
     const { data } = await api.get<ApiResponse<ProjectTask[]>>(`/projects/${projectId}/backlog`);
+    return data;
+  },
+};
+
+export const checklistApi = {
+  getByTask: async (taskId: number) => {
+    const { data } = await api.get<ApiResponse<TaskChecklistItem[]>>(`/tasks/${taskId}/checklists`);
+    return data;
+  },
+  add: async (taskId: number, title: string, assigneeId?: number) => {
+    const { data } = await api.post<ApiResponse<TaskChecklistItem>>(`/tasks/${taskId}/checklists`, { taskId, title, assigneeId });
+    return data;
+  },
+  toggle: async (id: number) => {
+    const { data } = await api.patch<ApiResponse<TaskChecklistItem>>(`/checklists/${id}/toggle`);
+    return data;
+  },
+  delete: async (id: number) => {
+    const { data } = await api.delete<ApiResponse<boolean>>(`/checklists/${id}`);
+    return data;
+  },
+};
+
+export const dependencyApi = {
+  getByTask: async (taskId: number) => {
+    const { data } = await api.get<ApiResponse<TaskDependencyItem[]>>(`/tasks/${taskId}/dependencies`);
+    return data;
+  },
+  add: async (taskId: number, dependsOnTaskId: number, dependencyType: number) => {
+    const { data } = await api.post<ApiResponse<TaskDependencyItem>>(`/tasks/${taskId}/dependencies`, { taskId, dependsOnTaskId, dependencyType });
+    return data;
+  },
+  delete: async (id: number) => {
+    const { data } = await api.delete<ApiResponse<boolean>>(`/dependencies/${id}`);
+    return data;
+  },
+};
+
+export const ganttApi = {
+  getByProject: async (projectId: number) => {
+    const { data } = await api.get<ApiResponse<GanttTask[]>>(`/projects/${projectId}/gantt`);
     return data;
   },
 };

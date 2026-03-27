@@ -10,5 +10,7 @@ public interface IApplicationDbContext
     DbSet<TaskStage> TaskStages { get; }
     DbSet<ProjectTask> ProjectTasks { get; }
     DbSet<Sprint> Sprints { get; }
+    DbSet<TaskDependency> TaskDependencies { get; }
+    DbSet<TaskChecklist> TaskChecklists { get; }
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

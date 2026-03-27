@@ -8,6 +8,7 @@ import { TaskDetailPage } from '@/pages/TaskDetailPage';
 import { SprintsPage } from '@/pages/SprintsPage';
 import { SprintDetailPage } from '@/pages/SprintDetailPage';
 import { BacklogPage } from '@/pages/BacklogPage';
+import { GanttPage } from '@/pages/GanttPage';
 import { PlaceholderPage } from '@/pages/PlaceholderPage';
 
 const queryClient = new QueryClient({
@@ -30,6 +31,7 @@ function App() {
             <Route path="/projects" element={<ProjectsPage />} />
             <Route path="/projects/:id" element={<ProjectDetailPage />} />
             <Route path="/projects/:projectId/tasks" element={<TasksPage />} />
+            <Route path="/projects/:projectId/gantt" element={<GanttPage />} />
             <Route path="/tasks" element={<PlaceholderPage />} />
             <Route path="/tasks/:id" element={<TaskDetailPage />} />
             <Route path="/sprints" element={<SprintsPage />} />

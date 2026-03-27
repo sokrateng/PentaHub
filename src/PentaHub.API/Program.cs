@@ -81,6 +81,8 @@ try
     app.MapTaskEndpoints();
     app.MapTaskStageEndpoints();
     app.MapSprintEndpoints();
+    app.MapChecklistEndpoints();
+    app.MapDependencyEndpoints();
 
     // Auto-migrate and seed
     using (var scope = app.Services.CreateScope())

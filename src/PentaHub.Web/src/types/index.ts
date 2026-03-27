@@ -186,3 +186,37 @@ export interface CreateSprintRequest {
   startDate: string;
   endDate: string;
 }
+
+export interface TaskChecklistItem {
+  id: number;
+  taskId: number;
+  title: string;
+  assigneeId?: number;
+  assigneeName?: string;
+  isCompleted: boolean;
+  sortOrder: number;
+}
+
+export interface TaskDependencyItem {
+  id: number;
+  taskId: number;
+  taskTitle?: string;
+  taskNumber?: string;
+  dependsOnTaskId: number;
+  dependsOnTaskTitle?: string;
+  dependsOnTaskNumber?: string;
+  dependencyType: number;
+  dependencyTypeText?: string;
+}
+
+export interface GanttTask {
+  id: number;
+  taskNumber: string;
+  title: string;
+  startDate?: string;
+  dueDate?: string;
+  progressPercent: number;
+  assigneeName?: string;
+  stageName?: string;
+  dependencies: { dependsOnTaskId: number; dependencyType: number }[];
+}

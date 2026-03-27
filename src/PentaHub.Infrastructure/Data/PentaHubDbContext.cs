@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using PentaHub.Application.Common.Interfaces;
 using PentaHub.Domain.Entities;
 using PentaHub.Domain.Enums;
+using PentaHub.Domain.Common;
 
 namespace PentaHub.Infrastructure.Data;
 
@@ -14,6 +15,8 @@ public class PentaHubDbContext : DbContext, IApplicationDbContext
     public DbSet<TaskStage> TaskStages => Set<TaskStage>();
     public DbSet<ProjectTask> ProjectTasks => Set<ProjectTask>();
     public DbSet<Sprint> Sprints => Set<Sprint>();
+    public DbSet<TaskDependency> TaskDependencies => Set<TaskDependency>();
+    public DbSet<TaskChecklist> TaskChecklists => Set<TaskChecklist>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -108,6 +111,25 @@ public class PentaHubDbContext : DbContext, IApplicationDbContext
             // Bitti (2 tasks) - Backlog (SprintId = null)
             new ProjectTask { Id = 14, TaskNumber = "T0014", Title = "Eğitim Materyalleri Hazırlama", ProjectId = 1, StageId = 5, AssigneeId = 4, Priority = Priority.Low, IsBillable = false, PlannedHours = 12, SpentHours = 12, RemainingHours = 0, ProgressPercent = 100, SortOrder = 1, StartDate = new DateTime(2025, 1, 15, 0, 0, 0, DateTimeKind.Utc), DueDate = new DateTime(2025, 2, 1, 0, 0, 0, DateTimeKind.Utc), CreatedAt = now },
             new ProjectTask { Id = 15, TaskNumber = "T0015", Title = "Dokümantasyon", ProjectId = 1, StageId = 5, AssigneeId = 5, Priority = Priority.None, IsBillable = false, PlannedHours = 8, SpentHours = 8, RemainingHours = 0, ProgressPercent = 100, SortOrder = 2, StartDate = new DateTime(2025, 1, 15, 0, 0, 0, DateTimeKind.Utc), DueDate = new DateTime(2025, 1, 31, 0, 0, 0, DateTimeKind.Utc), CreatedAt = now }
+        );
+
+        // TaskChecklists seed - 5 items for Task 1 "CRM Modülünün Konfigürasyonu"
+        modelBuilder.Entity<TaskChecklist>().HasData(
+            new TaskChecklist { Id = 1, TaskId = 1, Title = "Veritabanı şemasını hazırla", IsCompleted = true, SortOrder = 1, CreatedAt = now },
+            new TaskChecklist { Id = 2, TaskId = 1, Title = "API endpoint'leri tanımla", IsCompleted = true, SortOrder = 2, CreatedAt = now },
+            new TaskChecklist { Id = 3, TaskId = 1, Title = "Frontend formları oluştur", IsCompleted = false, SortOrder = 3, CreatedAt = now },
+            new TaskChecklist { Id = 4, TaskId = 1, Title = "Test senaryoları yaz", IsCompleted = false, SortOrder = 4, CreatedAt = now },
+            new TaskChecklist { Id = 5, TaskId = 1, Title = "Dokümantasyonu güncelle", IsCompleted = false, SortOrder = 5, CreatedAt = now }
+        );
+
+        // TaskDependencies seed
+        // Task 4 depends on Task 1 (FinishToStart)
+        // Task 7 depends on Task 3 (FinishToStart)
+        // Task 13 depends on Task 6 (FinishToStart)
+        modelBuilder.Entity<TaskDependency>().HasData(
+            new TaskDependency { Id = 1, TaskId = 4, DependsOnTaskId = 1, DependencyType = DependencyType.FinishToStart, CreatedAt = now },
+            new TaskDependency { Id = 2, TaskId = 7, DependsOnTaskId = 3, DependencyType = DependencyType.FinishToStart, CreatedAt = now },
+            new TaskDependency { Id = 3, TaskId = 13, DependsOnTaskId = 6, DependencyType = DependencyType.FinishToStart, CreatedAt = now }
         );
     }
 
