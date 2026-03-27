@@ -1,4 +1,4 @@
-import { NavLink, useNavigate } from 'react-router-dom';
+import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard,
   FolderKanban,
@@ -6,6 +6,7 @@ import {
   Zap,
   Inbox,
   Users,
+  Clock,
   Building2,
   LogOut,
 } from 'lucide-react';
@@ -24,6 +25,7 @@ const navItems: NavItem[] = [
   { to: '/sprints', label: 'Sprintler', icon: Zap },
   { to: '/backlog', label: 'Backlog', icon: Inbox },
   { to: '/resources', label: 'Kaynaklar', icon: Users },
+  { to: '/timesheets', label: 'Zaman Çizelgesi', icon: Clock },
   { to: '/contacts', label: 'Kontaklar', icon: Building2 },
 ];
 
@@ -39,6 +41,20 @@ function getInitials(name: string): string {
 export function Sidebar() {
   const { user, logout } = useAuthStore();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Returns true if the nav item should be highlighted based on current path
+  function isNavItemActive(to: string, defaultIsActive: boolean): boolean {
+    if (to === '/tasks') {
+      // Highlight "Görevler" for /tasks, /tasks/:id, and /projects/:projectId/tasks
+      return (
+        defaultIsActive ||
+        location.pathname.startsWith('/tasks/') ||
+        /^\/projects\/\d+\/tasks/.test(location.pathname)
+      );
+    }
+    return defaultIsActive;
+  }
 
   const handleLogout = () => {
     logout();
@@ -74,37 +90,41 @@ export function Sidebar() {
             key={to}
             to={to}
             end={to === '/'}
-            className={({ isActive }) =>
-              [
+            className={({ isActive }) => {
+              const active = isNavItemActive(to, isActive);
+              return [
                 'flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors duration-150 group relative',
-                isActive
+                active
                   ? 'text-white'
                   : 'text-[hsl(210_40%_70%)] hover:text-[hsl(210_40%_90%)]',
-              ].join(' ')
-            }
+              ].join(' ');
+            }}
             style={({ isActive }) =>
-              isActive
+              isNavItemActive(to, isActive)
                 ? { backgroundColor: 'hsl(220 20% 22%)' }
                 : {}
             }
           >
-            {({ isActive }) => (
-              <>
-                {isActive && (
-                  <span
-                    className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 rounded-r"
-                    style={{ backgroundColor: 'hsl(153 60% 48%)' }}
+            {({ isActive }) => {
+              const active = isNavItemActive(to, isActive);
+              return (
+                <>
+                  {active && (
+                    <span
+                      className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 rounded-r"
+                      style={{ backgroundColor: 'hsl(153 60% 48%)' }}
+                    />
+                  )}
+                  <Icon
+                    className={[
+                      'w-4 h-4 flex-shrink-0',
+                      active ? 'text-[hsl(153_60%_48%)]' : 'text-[hsl(210_40%_55%)] group-hover:text-[hsl(210_40%_75%)]',
+                    ].join(' ')}
                   />
-                )}
-                <Icon
-                  className={[
-                    'w-4 h-4 flex-shrink-0',
-                    isActive ? 'text-[hsl(153_60%_48%)]' : 'text-[hsl(210_40%_55%)] group-hover:text-[hsl(210_40%_75%)]',
-                  ].join(' ')}
-                />
-                <span>{label}</span>
-              </>
-            )}
+                  <span>{label}</span>
+                </>
+              );
+            }}
           </NavLink>
         ))}
       </nav>

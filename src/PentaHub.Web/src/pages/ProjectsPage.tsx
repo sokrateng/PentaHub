@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
@@ -17,6 +17,7 @@ import {
   Calendar,
   User as UserIcon,
   Building2,
+  X,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -46,6 +47,13 @@ import {
 import { projectsApi, usersApi } from '@/services/api';
 import { ProjectStatus, PrivacyLevel, EvaluationType } from '@/types';
 import type { ProjectListItem, CreateProjectRequest } from '@/types';
+
+interface FilterState {
+  status: string;
+  managerId: string;
+  isBillable: boolean | null;
+  excludeTemplates: boolean;
+}
 
 type ViewMode = 'kanban' | 'list';
 
@@ -211,16 +219,50 @@ function statusLabel(status: ProjectStatus): string {
   return 'Beklemede';
 }
 
+const defaultFilter: FilterState = {
+  status: 'all',
+  managerId: 'all',
+  isBillable: null,
+  excludeTemplates: false,
+};
+
 export function ProjectsPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [viewMode, setViewMode] = useState<ViewMode>('kanban');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [form, setForm] = useState<NewProjectForm>(defaultForm);
+  const [filterOpen, setFilterOpen] = useState(false);
+  const [pendingFilter, setPendingFilter] = useState<FilterState>(defaultFilter);
+  const [appliedFilter, setAppliedFilter] = useState<FilterState>(defaultFilter);
+  const filterRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (filterRef.current && !filterRef.current.contains(e.target as Node)) {
+        setFilterOpen(false);
+      }
+    }
+    if (filterOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [filterOpen]);
+
+  const hasActiveFilter =
+    appliedFilter.status !== 'all' ||
+    appliedFilter.managerId !== 'all' ||
+    appliedFilter.isBillable !== null ||
+    appliedFilter.excludeTemplates;
 
   const { data: projectsResponse, isLoading } = useQuery({
-    queryKey: ['projects'],
-    queryFn: () => projectsApi.getAll({ excludeTemplates: false }),
+    queryKey: ['projects', appliedFilter],
+    queryFn: () =>
+      projectsApi.getAll({
+        excludeTemplates: appliedFilter.excludeTemplates,
+        status: appliedFilter.status !== 'all' ? Number(appliedFilter.status) : undefined,
+        managerId: appliedFilter.managerId !== 'all' ? Number(appliedFilter.managerId) : undefined,
+      }),
   });
 
   const { data: usersResponse } = useQuery({
@@ -245,8 +287,13 @@ export function ProjectsPage() {
     },
   });
 
-  const projects = projectsResponse?.data ?? [];
+  const allProjects = projectsResponse?.data ?? [];
   const users = usersResponse?.data ?? [];
+
+  const projects = allProjects.filter((p) => {
+    if (appliedFilter.isBillable !== null && p.isBillable !== appliedFilter.isBillable) return false;
+    return true;
+  });
 
   const projectsByStatus = (status: ProjectStatus): ProjectListItem[] =>
     projects.filter((p) => p.status === status);
@@ -314,10 +361,148 @@ export function ProjectsPage() {
             </button>
           </div>
 
-          <Button variant="outline" size="sm" className="h-8 gap-1.5 text-xs">
-            <Filter className="w-3.5 h-3.5" />
-            Filtrele
-          </Button>
+          {/* Filter popover */}
+          <div className="relative" ref={filterRef}>
+            <Button
+              variant="outline"
+              size="sm"
+              className={[
+                'h-8 gap-1.5 text-xs',
+                hasActiveFilter ? 'border-primary text-primary' : '',
+              ].join(' ')}
+              onClick={() => {
+                setPendingFilter(appliedFilter);
+                setFilterOpen((prev) => !prev);
+              }}
+            >
+              <Filter className="w-3.5 h-3.5" />
+              Filtrele
+              {hasActiveFilter && (
+                <span
+                  className="w-1.5 h-1.5 rounded-full ml-0.5"
+                  style={{ backgroundColor: 'hsl(153 60% 33%)' }}
+                />
+              )}
+            </Button>
+
+            {filterOpen && (
+              <div className="absolute right-0 top-9 z-50 bg-white border border-border rounded-xl shadow-lg p-4 w-64 space-y-3">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-sm font-semibold text-foreground">Filtrele</span>
+                  <button
+                    onClick={() => setFilterOpen(false)}
+                    className="text-muted-foreground hover:text-foreground transition-colors"
+                    aria-label="Kapat"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+
+                {/* Status */}
+                <div className="space-y-1">
+                  <label className="text-xs font-medium text-muted-foreground">Durum</label>
+                  <Select
+                    value={pendingFilter.status}
+                    onValueChange={(v) => setPendingFilter((prev) => ({ ...prev, status: v }))}
+                  >
+                    <SelectTrigger className="h-8 text-xs">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Tümü</SelectItem>
+                      <SelectItem value={String(ProjectStatus.Beklemede)}>Beklemede</SelectItem>
+                      <SelectItem value={String(ProjectStatus.DevamEden)}>Devam Eden</SelectItem>
+                      <SelectItem value={String(ProjectStatus.Tamamlandi)}>Tamamlandı</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Manager */}
+                <div className="space-y-1">
+                  <label className="text-xs font-medium text-muted-foreground">Proje Yöneticisi</label>
+                  <Select
+                    value={pendingFilter.managerId}
+                    onValueChange={(v) => setPendingFilter((prev) => ({ ...prev, managerId: v }))}
+                  >
+                    <SelectTrigger className="h-8 text-xs">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Tümü</SelectItem>
+                      {users.map((u) => (
+                        <SelectItem key={u.id} value={String(u.id)}>
+                          {u.fullName}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Billable */}
+                <div className="space-y-1">
+                  <label className="text-xs font-medium text-muted-foreground">Faturalanabilir</label>
+                  <Select
+                    value={pendingFilter.isBillable === null ? 'all' : pendingFilter.isBillable ? 'yes' : 'no'}
+                    onValueChange={(v) =>
+                      setPendingFilter((prev) => ({
+                        ...prev,
+                        isBillable: v === 'all' ? null : v === 'yes',
+                      }))
+                    }
+                  >
+                    <SelectTrigger className="h-8 text-xs">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Tümü</SelectItem>
+                      <SelectItem value="yes">Faturalanabilir</SelectItem>
+                      <SelectItem value="no">Faturalanmaz</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Exclude templates */}
+                <label className="flex items-center gap-2 cursor-pointer py-0.5">
+                  <input
+                    type="checkbox"
+                    checked={pendingFilter.excludeTemplates}
+                    onChange={(e) =>
+                      setPendingFilter((prev) => ({ ...prev, excludeTemplates: e.target.checked }))
+                    }
+                    className="w-3.5 h-3.5 rounded accent-primary"
+                  />
+                  <span className="text-xs text-foreground">Şablonları hariç tut</span>
+                </label>
+
+                {/* Buttons */}
+                <div className="flex items-center gap-2 pt-1">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-7 text-xs flex-1"
+                    onClick={() => {
+                      setPendingFilter(defaultFilter);
+                      setAppliedFilter(defaultFilter);
+                      setFilterOpen(false);
+                    }}
+                  >
+                    Temizle
+                  </Button>
+                  <Button
+                    size="sm"
+                    className="h-7 text-xs flex-1"
+                    style={{ backgroundColor: 'hsl(153 60% 33%)', color: 'white' }}
+                    onClick={() => {
+                      setAppliedFilter(pendingFilter);
+                      setFilterOpen(false);
+                    }}
+                  >
+                    Uygula
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
 
           <Button
             size="sm"

@@ -13,11 +13,13 @@ import { SprintDetailPage } from '@/pages/SprintDetailPage';
 import { BacklogPage } from '@/pages/BacklogPage';
 import { GanttPage } from '@/pages/GanttPage';
 import { ResourcesPage } from '@/pages/ResourcesPage';
+import { UserTimeSheetsPage } from '@/pages/UserTimeSheetsPage';
 import { ContactsPage } from '@/pages/ContactsPage';
 import { ContactDetailPage } from '@/pages/ContactDetailPage';
 import { LoginPage } from '@/pages/LoginPage';
 import { RegisterPage } from '@/pages/RegisterPage';
 import { PlaceholderPage } from '@/pages/PlaceholderPage';
+import { GlobalTasksPage } from '@/pages/GlobalTasksPage';
 import { useAuthStore } from '@/stores/authStore';
 
 const queryClient = new QueryClient({
@@ -51,12 +53,13 @@ function AppWithAuth() {
           <Route path="/projects/:id" element={<ProjectDetailPage />} />
           <Route path="/projects/:projectId/tasks" element={<TasksPage />} />
           <Route path="/projects/:projectId/gantt" element={<GanttPage />} />
-          <Route path="/tasks" element={<PlaceholderPage />} />
+          <Route path="/tasks" element={<GlobalTasksPage />} />
           <Route path="/tasks/:id" element={<TaskDetailPage />} />
           <Route path="/sprints" element={<SprintsPage />} />
           <Route path="/sprints/:id" element={<SprintDetailPage />} />
           <Route path="/backlog" element={<BacklogPage />} />
           <Route path="/resources" element={<ResourcesPage />} />
+          <Route path="/timesheets" element={<UserTimeSheetsPage />} />
           <Route path="/contacts" element={<ContactsPage />} />
           <Route path="/contacts/:id" element={<ContactDetailPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />

@@ -11,6 +11,9 @@ import {
   AlertTriangle,
   Users,
   Save,
+  Mail,
+  FileWarning,
+  Sparkles,
 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -24,27 +27,19 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
-import { projectsApi, usersApi } from '@/services/api';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { projectsApi, usersApi, tasksApi, resourcesApi, taskStagesApi } from '@/services/api';
 import { ProjectStatus, PrivacyLevel, EvaluationType } from '@/types';
 import type { CreateProjectRequest } from '@/types';
 import { MilestonesTab } from '@/components/projects/MilestonesTab';
 import { CollaborationPanel } from '@/components/collaboration/CollaborationPanel';
-
-interface MetricItem {
-  label: string;
-  value: number | string;
-  icon: React.ComponentType<{ className?: string }>;
-}
-
-const metrics: MetricItem[] = [
-  { label: 'Belgeler', value: 0, icon: FileText },
-  { label: 'Görevler', value: 0, icon: ListTodo },
-  { label: 'Toplantı', value: 0, icon: CalendarDays },
-  { label: 'Zaman Çizelgesi', value: 0, icon: Clock },
-  { label: 'Aktif', value: 0, icon: Activity },
-  { label: 'Riskler', value: 0, icon: AlertTriangle },
-  { label: 'Kaynak Tahsisi', value: 0, icon: Users },
-];
 
 const tabItems = [
   'Ayarlar',
@@ -84,11 +79,39 @@ export function ProjectDetailPage() {
     queryFn: () => usersApi.getAll(),
   });
 
+  const { data: tasksResponse } = useQuery({
+    queryKey: ['project-tasks', projectId],
+    queryFn: () => tasksApi.getByProject(projectId),
+    enabled: !!projectId,
+  });
+
+  const { data: resourcesResponse } = useQuery({
+    queryKey: ['project-resources', projectId],
+    queryFn: () => resourcesApi.getByProject(projectId),
+    enabled: !!projectId,
+  });
+
+  const { data: stagesResponse } = useQuery({
+    queryKey: ['project-task-stages', projectId],
+    queryFn: () => taskStagesApi.getByProject(projectId),
+    enabled: !!projectId,
+  });
+
   const project = projectResponse?.data;
   const users = usersResponse?.data ?? [];
 
+  const taskColumns = tasksResponse?.data ?? [];
+  const totalTaskCount = taskColumns.reduce((sum, col) => sum + col.tasks.length, 0);
+
+  const resources = resourcesResponse?.data ?? [];
+  const uniqueResourceCount = new Set(resources.map((r) => r.userId)).size;
+
+  const taskStages = stagesResponse?.data ?? [];
+
   const [formData, setFormData] = useState<Partial<CreateProjectRequest>>({});
   const [activeTab, setActiveTab] = useState('Ayarlar');
+  const [descriptionValue, setDescriptionValue] = useState<string | null>(null);
+  const [emailValue, setEmailValue] = useState<string | null>(null);
 
   const updateMutation = useMutation({
     mutationFn: (payload: CreateProjectRequest) => projectsApi.update(projectId, payload),
@@ -198,33 +221,49 @@ export function ProjectDetailPage() {
         </div>
 
         {/* Metrics row */}
-        <div className="grid grid-cols-7 gap-2">
-          {metrics.map(({ label, value, icon: Icon }) => {
-            const isTasksMetric = label === 'Görevler';
-            return (
-              <div
-                key={label}
-                onClick={isTasksMetric ? () => navigate(`/projects/${projectId}/tasks`) : undefined}
-                className={[
-                  'bg-white rounded-lg border border-border p-3 flex flex-col items-center gap-1.5 text-center cursor-pointer hover:border-primary/40 hover:shadow-sm transition-all',
-                  isTasksMetric ? 'hover:border-primary hover:bg-primary/5' : '',
-                ].join(' ')}
-              >
-                <Icon
-                  className="w-4 h-4"
-                  style={isTasksMetric ? { color: 'hsl(153 60% 33%)' } : { color: 'var(--muted-foreground)' }}
-                />
-                <span className="text-lg font-bold text-foreground leading-none">{value}</span>
-                <span
-                  className="text-[10px] leading-tight"
-                  style={isTasksMetric ? { color: 'hsl(153 60% 33%)', fontWeight: 600 } : { color: 'var(--muted-foreground)' }}
-                >
-                  {label}
-                </span>
-              </div>
-            );
-          })}
-        </div>
+        {(() => {
+          const liveMetrics = [
+            { label: 'Belgeler', value: 0, icon: FileText, placeholder: true },
+            { label: 'Görevler', value: totalTaskCount, icon: ListTodo, placeholder: false },
+            { label: 'Toplantı', value: 0, icon: CalendarDays, placeholder: true },
+            { label: 'Zaman Çizelgesi', value: 0, icon: Clock, placeholder: true },
+            { label: 'Aktif', value: 0, icon: Activity, placeholder: true },
+            { label: 'Riskler', value: 0, icon: AlertTriangle, placeholder: true },
+            { label: 'Kaynak Tahsisi', value: uniqueResourceCount, icon: Users, placeholder: false },
+          ];
+          return (
+            <div className="grid grid-cols-7 gap-2">
+              {liveMetrics.map(({ label, value, icon: Icon, placeholder }) => {
+                const isTasksMetric = label === 'Görevler';
+                const isClickable = isTasksMetric;
+                return (
+                  <div
+                    key={label}
+                    onClick={isClickable ? () => navigate(`/projects/${projectId}/tasks`) : undefined}
+                    className={[
+                      'bg-white rounded-lg border border-border p-3 flex flex-col items-center gap-1.5 text-center transition-all',
+                      isClickable ? 'cursor-pointer hover:border-primary hover:bg-primary/5 hover:shadow-sm' : '',
+                      placeholder ? 'opacity-50' : '',
+                    ].join(' ')}
+                    title={placeholder ? 'Yakında aktif olacak' : undefined}
+                  >
+                    <Icon
+                      className="w-4 h-4"
+                      style={isTasksMetric ? { color: 'hsl(153 60% 33%)' } : { color: 'var(--muted-foreground)' }}
+                    />
+                    <span className="text-lg font-bold text-foreground leading-none">{value}</span>
+                    <span
+                      className="text-[10px] leading-tight"
+                      style={isTasksMetric ? { color: 'hsl(153 60% 33%)', fontWeight: 600 } : { color: 'var(--muted-foreground)' }}
+                    >
+                      {label}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          );
+        })()}
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1">
@@ -436,18 +475,219 @@ export function ProjectDetailPage() {
             <MilestonesTab projectId={projectId} />
           </TabsContent>
 
-          {/* Placeholder tabs */}
-          {tabItems.slice(1).filter((tab) => tab !== 'Kilometre Taşları').map((tab) => (
-            <TabsContent key={tab} value={tab} className="mt-5">
-              <div className="bg-white rounded-xl border border-border p-12 flex flex-col items-center justify-center text-center">
-                <Badge variant="outline" className="mb-3 text-xs">
-                  Yakında
-                </Badge>
-                <h3 className="text-base font-semibold text-foreground mb-1">{tab}</h3>
-                <p className="text-sm text-muted-foreground">Bu bölüm yakında eklenecek</p>
+          {/* Açıklama tab */}
+          <TabsContent value="Açıklama" className="mt-5">
+            <div className="bg-white rounded-xl border border-border p-6 space-y-4">
+              <h3 className="text-sm font-semibold text-foreground">Proje Açıklaması</h3>
+              {(descriptionValue === null && !project.description) ? (
+                <div className="text-sm text-muted-foreground italic bg-muted/40 rounded-lg p-4">
+                  Henüz açıklama eklenmemiş. Aşağıya açıklama ekleyebilirsiniz.
+                </div>
+              ) : null}
+              <textarea
+                value={descriptionValue !== null ? descriptionValue : (project.description ?? '')}
+                onChange={(e) => setDescriptionValue(e.target.value)}
+                placeholder="Proje açıklaması buraya yazın..."
+                className="w-full min-h-[160px] rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring resize-y"
+              />
+              <div className="flex justify-end">
+                <Button
+                  onClick={() => {
+                    const desc = descriptionValue !== null ? descriptionValue : (project.description ?? '');
+                    const payload: CreateProjectRequest = {
+                      name: project.name,
+                      description: desc || undefined,
+                      status: project.status,
+                      projectManagerId: project.projectManagerId,
+                      departmentName: project.departmentName,
+                      privacyLevel: project.privacyLevel,
+                      isBillable: project.isBillable,
+                      isTemplate: project.isTemplate,
+                      startDate: project.startDate,
+                      endDate: project.endDate,
+                      projectEmail: project.projectEmail,
+                      customerEvaluation: project.customerEvaluation,
+                      evaluationFrequency: project.evaluationFrequency,
+                    };
+                    updateMutation.mutate(payload);
+                  }}
+                  disabled={updateMutation.isPending}
+                  className="gap-2"
+                  style={{ backgroundColor: 'hsl(153 60% 33%)', color: 'white' }}
+                >
+                  <Save className="w-4 h-4" />
+                  {updateMutation.isPending ? 'Kaydediliyor...' : 'Kaydet'}
+                </Button>
               </div>
-            </TabsContent>
-          ))}
+            </div>
+          </TabsContent>
+
+          {/* E-postalar tab */}
+          <TabsContent value="E-postalar" className="mt-5">
+            <div className="bg-white rounded-xl border border-border p-6 space-y-4">
+              <div className="flex items-center gap-2">
+                <Mail className="w-4 h-4" style={{ color: 'hsl(153 60% 33%)' }} />
+                <h3 className="text-sm font-semibold text-foreground">Proje E-posta Adresi</h3>
+              </div>
+              {project.projectEmail ? (
+                <div className="bg-muted/40 rounded-lg px-4 py-3 text-sm text-foreground">
+                  Proje e-posta adresi:{' '}
+                  <span className="font-mono font-semibold">{project.projectEmail}</span>
+                </div>
+              ) : (
+                <div className="text-sm text-muted-foreground italic bg-muted/40 rounded-lg p-4">
+                  E-posta adresi tanımlanmamış.
+                </div>
+              )}
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium text-foreground">
+                  {project.projectEmail ? 'E-posta Adresini Değiştir' : 'E-posta Adresi Ekle'}
+                </label>
+                <Input
+                  type="email"
+                  placeholder="proje@example.com"
+                  value={emailValue !== null ? emailValue : (project.projectEmail ?? '')}
+                  onChange={(e) => setEmailValue(e.target.value)}
+                />
+              </div>
+              <div className="flex justify-end">
+                <Button
+                  onClick={() => {
+                    const email = emailValue !== null ? emailValue : (project.projectEmail ?? '');
+                    const payload: CreateProjectRequest = {
+                      name: project.name,
+                      description: project.description,
+                      status: project.status,
+                      projectManagerId: project.projectManagerId,
+                      departmentName: project.departmentName,
+                      privacyLevel: project.privacyLevel,
+                      isBillable: project.isBillable,
+                      isTemplate: project.isTemplate,
+                      startDate: project.startDate,
+                      endDate: project.endDate,
+                      projectEmail: email || undefined,
+                      customerEvaluation: project.customerEvaluation,
+                      evaluationFrequency: project.evaluationFrequency,
+                    };
+                    updateMutation.mutate(payload);
+                    setEmailValue(null);
+                  }}
+                  disabled={updateMutation.isPending}
+                  className="gap-2"
+                  style={{ backgroundColor: 'hsl(153 60% 33%)', color: 'white' }}
+                >
+                  <Save className="w-4 h-4" />
+                  {updateMutation.isPending ? 'Kaydediliyor...' : 'Kaydet'}
+                </Button>
+              </div>
+            </div>
+          </TabsContent>
+
+          {/* Görev Aşamaları tab */}
+          <TabsContent value="Görev Aşamaları" className="mt-5">
+            <div className="bg-white rounded-xl border border-border overflow-hidden">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Aşama Adı</TableHead>
+                    <TableHead className="text-center">Sıra</TableHead>
+                    <TableHead className="text-center">Varsayılan</TableHead>
+                    <TableHead className="text-center">Kapalı Aşama</TableHead>
+                    <TableHead className="text-center">Kanban'da Göster</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {taskStages.length === 0 ? (
+                    <TableRow>
+                      <TableCell
+                        colSpan={5}
+                        className="text-center text-muted-foreground py-10 text-sm"
+                      >
+                        Bu proje için görev aşaması tanımlanmamış.
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    taskStages.map((stage) => (
+                      <TableRow key={stage.id}>
+                        <TableCell className="font-medium text-sm">{stage.name}</TableCell>
+                        <TableCell className="text-center text-sm text-muted-foreground">
+                          {stage.sortOrder}
+                        </TableCell>
+                        <TableCell className="text-center">
+                          {stage.isDefault ? (
+                            <Badge
+                              className="text-[10px]"
+                              style={{ backgroundColor: 'hsl(153 60% 33%)', color: 'white' }}
+                            >
+                              Varsayılan
+                            </Badge>
+                          ) : (
+                            <span className="text-muted-foreground text-xs">—</span>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-center">
+                          {stage.isClosedStage ? (
+                            <Badge variant="secondary" className="text-[10px]">
+                              Kapalı
+                            </Badge>
+                          ) : (
+                            <span className="text-muted-foreground text-xs">—</span>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-center">
+                          {stage.showInKanban ? (
+                            <Badge variant="outline" className="text-[10px]">
+                              Evet
+                            </Badge>
+                          ) : (
+                            <span className="text-muted-foreground text-xs">Hayır</span>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          </TabsContent>
+
+          {/* Hand-over tab */}
+          <TabsContent value="Hand-over" className="mt-5">
+            <div className="bg-white rounded-xl border border-border p-12 flex flex-col items-center justify-center text-center gap-4">
+              <div
+                className="w-14 h-14 rounded-2xl flex items-center justify-center"
+                style={{ backgroundColor: 'hsl(220 20% 96%)' }}
+              >
+                <FileWarning className="w-6 h-6 text-muted-foreground" />
+              </div>
+              <div className="space-y-1.5">
+                <h3 className="text-base font-semibold text-foreground">Hand-over Raporu Yok</h3>
+                <p className="text-sm text-muted-foreground max-w-sm">
+                  Hand-over raporu bu projede henüz oluşturulmamış. Bu özellik, proje teslim
+                  sürecinde otomatik rapor oluşturmak için kullanılacaktır.
+                </p>
+              </div>
+            </div>
+          </TabsContent>
+
+          {/* AI Analysis tab */}
+          <TabsContent value="AI Analysis" className="mt-5">
+            <div className="bg-white rounded-xl border border-border p-12 flex flex-col items-center justify-center text-center gap-4">
+              <div
+                className="w-14 h-14 rounded-2xl flex items-center justify-center"
+                style={{ backgroundColor: 'hsl(153 60% 96%)' }}
+              >
+                <Sparkles className="w-6 h-6" style={{ color: 'hsl(153 60% 33%)' }} />
+              </div>
+              <div className="space-y-1.5">
+                <h3 className="text-base font-semibold text-foreground">AI Analizi Mevcut Değil</h3>
+                <p className="text-sm text-muted-foreground max-w-sm">
+                  AI destekli risk analizi bu projede henüz çalıştırılmamış. Bu özellik, proje
+                  risklerini yapay zeka ile analiz etmek için kullanılacaktır.
+                </p>
+              </div>
+            </div>
+          </TabsContent>
         </Tabs>
       </div>
 
