@@ -136,7 +136,11 @@ function AddResourceDialog({ open, onClose, preselectedProjectId }: AddResourceD
             <label className="text-sm font-medium">Kullanıcı *</label>
             <Select value={form.userId} onValueChange={(v) => setForm((p) => ({ ...p, userId: v }))}>
               <SelectTrigger>
-                <SelectValue placeholder="Kullanıcı seçin..." />
+                <SelectValue placeholder="Kullanıcı seçin...">
+                  {form.userId
+                    ? users.find((u) => String(u.id) === form.userId)?.fullName ?? 'Kullanıcı seçin...'
+                    : undefined}
+                </SelectValue>
               </SelectTrigger>
               <SelectContent>
                 {users.map((u) => (
@@ -158,7 +162,11 @@ function AddResourceDialog({ open, onClose, preselectedProjectId }: AddResourceD
               }
             >
               <SelectTrigger>
-                <SelectValue placeholder="Proje seçin..." />
+                <SelectValue placeholder="Proje seçin...">
+                  {form.projectId
+                    ? projects.find((p) => String(p.id) === form.projectId)?.name ?? 'Proje seçin...'
+                    : undefined}
+                </SelectValue>
               </SelectTrigger>
               <SelectContent>
                 {projects.map((p) => (
@@ -179,7 +187,11 @@ function AddResourceDialog({ open, onClose, preselectedProjectId }: AddResourceD
               disabled={!form.projectId}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Görev seçin..." />
+                <SelectValue placeholder="Görev seçin...">
+                  {form.taskId
+                    ? tasks.find((t) => String(t.id) === form.taskId)?.title ?? 'Görev seçin...'
+                    : undefined}
+                </SelectValue>
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="">Görev yok</SelectItem>
@@ -336,7 +348,11 @@ export function ResourcesPage() {
           <label className="text-sm font-medium text-foreground flex-shrink-0">Proje Seçin:</label>
           <Select value={selectedProjectId} onValueChange={setSelectedProjectId}>
             <SelectTrigger className="max-w-xs">
-              <SelectValue placeholder="Proje seçin..." />
+              <SelectValue placeholder="Proje seçin...">
+                {selectedProjectId
+                  ? projects.find((p) => String(p.id) === selectedProjectId)?.name ?? 'Proje seçin...'
+                  : undefined}
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
               {projects.map((p) => (

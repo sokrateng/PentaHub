@@ -389,7 +389,11 @@ export function TasksPage() {
           <Select value={filterAssignee} onValueChange={setFilterAssignee}>
             <SelectTrigger className="h-8 w-[150px] text-xs">
               <UserIcon className="w-3.5 h-3.5 mr-1 text-muted-foreground" />
-              <SelectValue placeholder="Atanan" />
+              <SelectValue placeholder="Atanan">
+                {filterAssignee === 'all'
+                  ? 'Tüm Kişiler'
+                  : users.find((u) => String(u.id) === filterAssignee)?.fullName ?? 'Atanan'}
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Tüm Kişiler</SelectItem>
@@ -405,7 +409,11 @@ export function TasksPage() {
           <Select value={filterPriority} onValueChange={setFilterPriority}>
             <SelectTrigger className="h-8 w-[130px] text-xs">
               <Filter className="w-3.5 h-3.5 mr-1 text-muted-foreground" />
-              <SelectValue placeholder="Öncelik" />
+              <SelectValue placeholder="Öncelik">
+                {filterPriority === 'all'
+                  ? 'Tüm Öncelikler'
+                  : PRIORITY_LABELS[Number(filterPriority)] ?? 'Öncelik'}
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Tüm Öncelikler</SelectItem>
@@ -560,7 +568,11 @@ export function TasksPage() {
                 onValueChange={(value) => setForm((prev) => ({ ...prev, assigneeId: value }))}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Kişi seçin..." />
+                  <SelectValue placeholder="Kişi seçin...">
+                    {form.assigneeId
+                      ? users.find((u) => String(u.id) === form.assigneeId)?.fullName ?? 'Kişi seçin...'
+                      : undefined}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   {users.map((user) => (
@@ -583,7 +595,9 @@ export function TasksPage() {
                 onValueChange={(value) => setForm((prev) => ({ ...prev, priority: value }))}
               >
                 <SelectTrigger>
-                  <SelectValue />
+                  <SelectValue>
+                    {PRIORITY_LABELS[Number(form.priority)] ?? 'Yok'}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   {Object.entries(PRIORITY_LABELS).map(([val, label]) => (

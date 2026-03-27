@@ -406,7 +406,17 @@ export function ProjectsPage() {
                     onValueChange={(v) => setPendingFilter((prev) => ({ ...prev, status: v }))}
                   >
                     <SelectTrigger className="h-8 text-xs">
-                      <SelectValue />
+                      <SelectValue>
+                        {pendingFilter.status === 'all'
+                          ? 'Tümü'
+                          : pendingFilter.status === String(ProjectStatus.Beklemede)
+                          ? 'Beklemede'
+                          : pendingFilter.status === String(ProjectStatus.DevamEden)
+                          ? 'Devam Eden'
+                          : pendingFilter.status === String(ProjectStatus.Tamamlandi)
+                          ? 'Tamamlandı'
+                          : 'Tümü'}
+                      </SelectValue>
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">Tümü</SelectItem>
@@ -425,7 +435,11 @@ export function ProjectsPage() {
                     onValueChange={(v) => setPendingFilter((prev) => ({ ...prev, managerId: v }))}
                   >
                     <SelectTrigger className="h-8 text-xs">
-                      <SelectValue />
+                      <SelectValue>
+                        {pendingFilter.managerId === 'all'
+                          ? 'Tümü'
+                          : users.find((u) => String(u.id) === pendingFilter.managerId)?.fullName ?? 'Tümü'}
+                      </SelectValue>
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">Tümü</SelectItem>
@@ -451,7 +465,13 @@ export function ProjectsPage() {
                     }
                   >
                     <SelectTrigger className="h-8 text-xs">
-                      <SelectValue />
+                      <SelectValue>
+                        {pendingFilter.isBillable === null
+                          ? 'Tümü'
+                          : pendingFilter.isBillable
+                          ? 'Faturalanabilir'
+                          : 'Faturalanmaz'}
+                      </SelectValue>
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">Tümü</SelectItem>
@@ -747,7 +767,15 @@ export function ProjectsPage() {
                 onValueChange={(value) => setForm((prev) => ({ ...prev, status: value }))}
               >
                 <SelectTrigger>
-                  <SelectValue />
+                  <SelectValue>
+                    {form.status === String(ProjectStatus.Beklemede)
+                      ? 'Beklemede'
+                      : form.status === String(ProjectStatus.DevamEden)
+                      ? 'Devam Eden'
+                      : form.status === String(ProjectStatus.Tamamlandi)
+                      ? 'Tamamlandı'
+                      : 'Beklemede'}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value={String(ProjectStatus.Beklemede)}>Beklemede</SelectItem>

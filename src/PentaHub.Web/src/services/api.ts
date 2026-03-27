@@ -4,6 +4,7 @@ import type {
   Project,
   ProjectListItem,
   ProjectStats,
+  ProjectMetrics,
   User,
   CreateProjectRequest,
   ProjectTask,
@@ -102,6 +103,11 @@ export const projectsApi = {
       ...project.data,
       status,
     });
+    return data;
+  },
+
+  getMetrics: async (id: number) => {
+    const { data } = await api.get<ApiResponse<ProjectMetrics>>(`/projects/${id}/metrics`);
     return data;
   },
 };

@@ -370,6 +370,23 @@ export interface CreateContactRequest {
   tags?: string;
 }
 
+// --- Project Metrics ---
+
+export interface ProjectMetrics {
+  documentCount: number;
+  taskCount: number;
+  meetingCount: number;
+  totalHours: number;
+  activeTaskCount: number;
+  riskCount: number;
+  resourceCount: number;
+  completedTaskCount: number;
+  billableHours: number;
+  overdueTaskCount: number;
+  milestoneCount: number;
+  sprintCount: number;
+}
+
 // --- FAZ 4: Authentication ---
 
 export interface LoginRequest {

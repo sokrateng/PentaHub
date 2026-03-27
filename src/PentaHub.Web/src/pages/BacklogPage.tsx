@@ -104,7 +104,7 @@ function AssignToSprintDialog({
     enabled: open && !!projectId,
   });
 
-  const activeSprints = (sprintsResponse?.data ?? []).filter(
+  const activeSprints = (Array.isArray(sprintsResponse?.data) ? sprintsResponse.data : []).filter(
     (s) => s.state !== SprintState.Done
   );
 
@@ -136,7 +136,11 @@ function AssignToSprintDialog({
             <label className="text-sm font-medium text-foreground">Sprint</label>
             <Select value={selectedSprintId} onValueChange={setSelectedSprintId}>
               <SelectTrigger>
-                <SelectValue placeholder="Sprint seçin..." />
+                <SelectValue placeholder="Sprint seçin...">
+                  {selectedSprintId
+                    ? activeSprints.find((s) => String(s.id) === selectedSprintId)?.name ?? 'Sprint seçin...'
+                    : undefined}
+                </SelectValue>
               </SelectTrigger>
               <SelectContent>
                 {activeSprints.length === 0 ? (
@@ -237,7 +241,7 @@ export function BacklogPage() {
     queryFn: () => projectsApi.getAll({ excludeTemplates: true }),
   });
 
-  const projects = projectsResponse?.data ?? [];
+  const projects = Array.isArray(projectsResponse?.data) ? projectsResponse.data : [];
 
   const { data: backlogResponse, isLoading } = useQuery({
     queryKey: ['backlog', selectedProjectId ? Number(selectedProjectId) : null],
@@ -250,7 +254,7 @@ export function BacklogPage() {
     queryFn: () => usersApi.getAll(),
   });
 
-  const users = usersResponse?.data ?? [];
+  const users = Array.isArray(usersResponse?.data) ? usersResponse.data : [];
 
   const assignTasksMutation = useMutation({
     mutationFn: async ({ sprintId, taskIds }: { sprintId: number; taskIds: number[] }) => {
@@ -290,7 +294,7 @@ export function BacklogPage() {
     createTaskMutation.mutate(payload);
   };
 
-  const tasks = backlogResponse?.data ?? [];
+  const tasks = Array.isArray(backlogResponse?.data) ? backlogResponse.data : [];
 
   const toggleTask = (taskId: number) => {
     setSelectedTaskIds((prev) => {
@@ -330,7 +334,11 @@ export function BacklogPage() {
           {/* Project selector */}
           <Select value={selectedProjectId} onValueChange={(v) => { setSelectedProjectId(v); setSelectedTaskIds(new Set()); }}>
             <SelectTrigger className="h-8 w-[220px] text-xs">
-              <SelectValue placeholder="Proje seçin..." />
+              <SelectValue placeholder="Proje seçin...">
+                {selectedProjectId
+                  ? projects.find((p) => String(p.id) === selectedProjectId)?.name ?? 'Proje seçin...'
+                  : undefined}
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
               {projects.map((p) => (
@@ -521,7 +529,11 @@ export function BacklogPage() {
                 onValueChange={(v) => setTaskForm((prev) => ({ ...prev, assigneeId: v }))}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Kişi seçin..." />
+                  <SelectValue placeholder="Kişi seçin...">
+                    {taskForm.assigneeId
+                      ? users.find((u) => String(u.id) === taskForm.assigneeId)?.fullName ?? 'Kişi seçin...'
+                      : undefined}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   {users.map((u) => (
@@ -540,7 +552,14 @@ export function BacklogPage() {
                 onValueChange={(v) => setTaskForm((prev) => ({ ...prev, priority: v }))}
               >
                 <SelectTrigger>
-                  <SelectValue />
+                  <SelectValue>
+                    {taskForm.priority === '0' ? 'Yok'
+                      : taskForm.priority === '1' ? 'Düşük'
+                      : taskForm.priority === '2' ? 'Normal'
+                      : taskForm.priority === '3' ? 'Yüksek'
+                      : taskForm.priority === '4' ? 'Acil'
+                      : 'Yok'}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="0">Yok</SelectItem>

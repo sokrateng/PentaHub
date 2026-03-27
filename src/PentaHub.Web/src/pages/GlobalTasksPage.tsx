@@ -170,7 +170,11 @@ export function GlobalTasksPage() {
         <div className="flex items-center gap-2">
           <Select value={selectedProjectId} onValueChange={setSelectedProjectId}>
             <SelectTrigger className="h-8 w-[220px] text-xs">
-              <SelectValue placeholder="Proje seçin..." />
+              <SelectValue placeholder="Proje seçin...">
+                {selectedProjectId === 'all'
+                  ? 'Tüm Projeler'
+                  : projects.find((p) => String(p.id) === selectedProjectId)?.name ?? 'Proje seçin...'}
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Tüm Projeler</SelectItem>
@@ -351,7 +355,11 @@ export function GlobalTasksPage() {
                 onValueChange={(v) => setTaskForm((prev) => ({ ...prev, assigneeId: v }))}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Kişi seçin..." />
+                  <SelectValue placeholder="Kişi seçin...">
+                    {taskForm.assigneeId
+                      ? users.find((u) => String(u.id) === taskForm.assigneeId)?.fullName ?? 'Kişi seçin...'
+                      : undefined}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   {users.map((u) => (
@@ -370,7 +378,14 @@ export function GlobalTasksPage() {
                 onValueChange={(v) => setTaskForm((prev) => ({ ...prev, priority: v }))}
               >
                 <SelectTrigger>
-                  <SelectValue />
+                  <SelectValue>
+                    {taskForm.priority === '0' ? 'Yok'
+                      : taskForm.priority === '1' ? 'Düşük'
+                      : taskForm.priority === '2' ? 'Normal'
+                      : taskForm.priority === '3' ? 'Yüksek'
+                      : taskForm.priority === '4' ? 'Acil'
+                      : 'Yok'}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="0">Yok</SelectItem>

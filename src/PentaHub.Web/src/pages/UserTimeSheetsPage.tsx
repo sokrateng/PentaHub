@@ -165,7 +165,11 @@ export function UserTimeSheetsPage() {
             <label className="text-sm font-medium">Kullanıcı</label>
             <Select value={selectedUserId} onValueChange={setSelectedUserId}>
               <SelectTrigger>
-                <SelectValue placeholder="Kullanıcı seçin..." />
+                <SelectValue placeholder="Kullanıcı seçin...">
+                  {selectedUserId
+                    ? users.find((u) => String(u.id) === selectedUserId)?.fullName ?? 'Kullanıcı seçin...'
+                    : undefined}
+                </SelectValue>
               </SelectTrigger>
               <SelectContent>
                 {users.map((u) => (

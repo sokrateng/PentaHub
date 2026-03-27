@@ -7,6 +7,7 @@ using PentaHub.Application.Projects.Commands.DeleteProject;
 using PentaHub.Application.Projects.Queries.GetProjectById;
 using PentaHub.Application.Projects.Queries.GetProjectList;
 using PentaHub.Application.Projects.Queries.GetProjectStats;
+using PentaHub.Application.Projects.Queries.GetProjectMetrics;
 using PentaHub.Domain.Enums;
 
 namespace PentaHub.API.Endpoints;
@@ -59,6 +60,14 @@ public static class ProjectEndpoints
         .WithName("GetProjectById")
         .Produces<ApiResponse<ProjectDto>>()
         .ProducesProblem(404);
+
+        group.MapGet("/{id:int}/metrics", async (int id, IMediator mediator) =>
+        {
+            var result = await mediator.Send(new GetProjectMetricsQuery(id));
+            return Results.Ok(ApiResponse<ProjectMetricsDto>.Ok(result));
+        })
+        .WithName("GetProjectMetrics")
+        .Produces<ApiResponse<ProjectMetricsDto>>();
 
         group.MapPost("/", async (CreateProjectCommand command, IMediator mediator) =>
         {

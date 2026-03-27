@@ -241,7 +241,11 @@ export function SprintsPage() {
           {/* Project filter */}
           <Select value={selectedProjectId} onValueChange={setSelectedProjectId}>
             <SelectTrigger className="h-8 w-[200px] text-xs">
-              <SelectValue placeholder="Tüm Projeler" />
+              <SelectValue placeholder="Tüm Projeler">
+                {selectedProjectId === 'all'
+                  ? 'Tüm Projeler'
+                  : projects.find((p) => String(p.id) === selectedProjectId)?.name ?? 'Tüm Projeler'}
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Tüm Projeler</SelectItem>
@@ -348,7 +352,11 @@ export function SprintsPage() {
                 onValueChange={(value) => setForm((prev) => ({ ...prev, projectId: value }))}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Proje seçin..." />
+                  <SelectValue placeholder="Proje seçin...">
+                    {form.projectId
+                      ? projects.find((p) => String(p.id) === form.projectId)?.name ?? 'Proje seçin...'
+                      : undefined}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   {projects.map((p) => (

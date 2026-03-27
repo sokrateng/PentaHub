@@ -35,7 +35,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { projectsApi, usersApi, tasksApi, resourcesApi, taskStagesApi } from '@/services/api';
+import { projectsApi, usersApi, taskStagesApi } from '@/services/api';
 import { ProjectStatus, PrivacyLevel, EvaluationType } from '@/types';
 import type { CreateProjectRequest } from '@/types';
 import { MilestonesTab } from '@/components/projects/MilestonesTab';
@@ -79,15 +79,9 @@ export function ProjectDetailPage() {
     queryFn: () => usersApi.getAll(),
   });
 
-  const { data: tasksResponse } = useQuery({
-    queryKey: ['project-tasks', projectId],
-    queryFn: () => tasksApi.getByProject(projectId),
-    enabled: !!projectId,
-  });
-
-  const { data: resourcesResponse } = useQuery({
-    queryKey: ['project-resources', projectId],
-    queryFn: () => resourcesApi.getByProject(projectId),
+  const { data: metricsResponse } = useQuery({
+    queryKey: ['project-metrics', projectId],
+    queryFn: () => projectsApi.getMetrics(projectId),
     enabled: !!projectId,
   });
 
@@ -99,13 +93,7 @@ export function ProjectDetailPage() {
 
   const project = projectResponse?.data;
   const users = usersResponse?.data ?? [];
-
-  const taskColumns = tasksResponse?.data ?? [];
-  const totalTaskCount = taskColumns.reduce((sum, col) => sum + col.tasks.length, 0);
-
-  const resources = resourcesResponse?.data ?? [];
-  const uniqueResourceCount = new Set(resources.map((r) => r.userId)).size;
-
+  const metrics = metricsResponse?.data;
   const taskStages = stagesResponse?.data ?? [];
 
   const [formData, setFormData] = useState<Partial<CreateProjectRequest>>({});
@@ -221,49 +209,96 @@ export function ProjectDetailPage() {
         </div>
 
         {/* Metrics row */}
-        {(() => {
-          const liveMetrics = [
-            { label: 'Belgeler', value: 0, icon: FileText, placeholder: true },
-            { label: 'Görevler', value: totalTaskCount, icon: ListTodo, placeholder: false },
-            { label: 'Toplantı', value: 0, icon: CalendarDays, placeholder: true },
-            { label: 'Zaman Çizelgesi', value: 0, icon: Clock, placeholder: true },
-            { label: 'Aktif', value: 0, icon: Activity, placeholder: true },
-            { label: 'Riskler', value: 0, icon: AlertTriangle, placeholder: true },
-            { label: 'Kaynak Tahsisi', value: uniqueResourceCount, icon: Users, placeholder: false },
-          ];
-          return (
-            <div className="grid grid-cols-7 gap-2">
-              {liveMetrics.map(({ label, value, icon: Icon, placeholder }) => {
-                const isTasksMetric = label === 'Görevler';
-                const isClickable = isTasksMetric;
-                return (
-                  <div
-                    key={label}
-                    onClick={isClickable ? () => navigate(`/projects/${projectId}/tasks`) : undefined}
-                    className={[
-                      'bg-white rounded-lg border border-border p-3 flex flex-col items-center gap-1.5 text-center transition-all',
-                      isClickable ? 'cursor-pointer hover:border-primary hover:bg-primary/5 hover:shadow-sm' : '',
-                      placeholder ? 'opacity-50' : '',
-                    ].join(' ')}
-                    title={placeholder ? 'Yakında aktif olacak' : undefined}
-                  >
-                    <Icon
-                      className="w-4 h-4"
-                      style={isTasksMetric ? { color: 'hsl(153 60% 33%)' } : { color: 'var(--muted-foreground)' }}
-                    />
-                    <span className="text-lg font-bold text-foreground leading-none">{value}</span>
-                    <span
-                      className="text-[10px] leading-tight"
-                      style={isTasksMetric ? { color: 'hsl(153 60% 33%)', fontWeight: 600 } : { color: 'var(--muted-foreground)' }}
-                    >
-                      {label}
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
-          );
-        })()}
+        <div className="grid grid-cols-7 gap-2">
+          {/* Belgeler */}
+          <div className="bg-white rounded-lg border border-border p-3 flex flex-col items-center gap-1 text-center">
+            <FileText className="w-4 h-4" style={{ color: 'hsl(213 94% 48%)' }} />
+            <span className="text-lg font-bold text-foreground leading-none">{metrics?.documentCount ?? 0}</span>
+            <span className="text-[10px] font-semibold" style={{ color: 'hsl(213 94% 48%)' }}>Belgeler</span>
+            <span className="text-[9px] text-muted-foreground leading-tight">Not ve e-posta</span>
+          </div>
+
+          {/* Görevler */}
+          <div
+            className="bg-white rounded-lg border border-border p-3 flex flex-col items-center gap-1 text-center cursor-pointer hover:border-[hsl(153_60%_33%)] hover:bg-[hsl(153_60%_33%)]/5 hover:shadow-sm transition-all"
+            onClick={() => navigate(`/projects/${projectId}/tasks`)}
+            title="Görevlere git"
+          >
+            <ListTodo className="w-4 h-4" style={{ color: 'hsl(153 60% 33%)' }} />
+            <span className="text-lg font-bold text-foreground leading-none">{metrics?.taskCount ?? 0}</span>
+            <span className="text-[10px] font-semibold" style={{ color: 'hsl(153 60% 33%)' }}>Görevler</span>
+            <span className="text-[9px] text-muted-foreground leading-tight">{metrics?.activeTaskCount ?? 0} aktif</span>
+          </div>
+
+          {/* Toplantı */}
+          <div className="bg-white rounded-lg border border-border p-3 flex flex-col items-center gap-1 text-center">
+            <CalendarDays className="w-4 h-4" style={{ color: 'hsl(270 60% 55%)' }} />
+            <span className="text-lg font-bold text-foreground leading-none">{metrics?.meetingCount ?? 0}</span>
+            <span className="text-[10px] font-semibold" style={{ color: 'hsl(270 60% 55%)' }}>Toplantı</span>
+            <span className="text-[9px] text-muted-foreground leading-tight">Planlanan toplantı</span>
+          </div>
+
+          {/* Zaman Çizelgesi */}
+          <div
+            className="bg-white rounded-lg border border-border p-3 flex flex-col items-center gap-1 text-center cursor-pointer hover:border-[hsl(38_92%_50%)] hover:bg-[hsl(38_92%_50%)]/5 hover:shadow-sm transition-all"
+            onClick={() => navigate(`/timesheets`)}
+            title="Zaman çizelgesine git"
+          >
+            <Clock className="w-4 h-4" style={{ color: 'hsl(38 92% 50%)' }} />
+            <span className="text-lg font-bold text-foreground leading-none">{metrics?.totalHours ?? 0}s</span>
+            <span className="text-[10px] font-semibold" style={{ color: 'hsl(38 92% 50%)' }}>Zaman Çizelgesi</span>
+            <span className="text-[9px] text-muted-foreground leading-tight">{metrics?.billableHours ?? 0}s faturalabilir</span>
+          </div>
+
+          {/* Aktif */}
+          <div
+            className="bg-white rounded-lg border border-border p-3 flex flex-col items-center gap-1 text-center cursor-pointer hover:border-[hsl(152_76%_40%)] hover:bg-[hsl(152_76%_40%)]/5 hover:shadow-sm transition-all"
+            onClick={() => navigate(`/projects/${projectId}/tasks`)}
+            title="Aktif görevlere git"
+          >
+            <Activity className="w-4 h-4" style={{ color: 'hsl(152 76% 40%)' }} />
+            <span className="text-lg font-bold text-foreground leading-none">{metrics?.activeTaskCount ?? 0}</span>
+            <span className="text-[10px] font-semibold" style={{ color: 'hsl(152 76% 40%)' }}>Aktif</span>
+            <span className="text-[9px] text-muted-foreground leading-tight">{metrics?.completedTaskCount ?? 0} tamamlandı</span>
+          </div>
+
+          {/* Riskler */}
+          {(() => {
+            const riskCount = metrics?.riskCount ?? 0;
+            const hasRisk = riskCount > 0;
+            return (
+              <div
+                className="rounded-lg border p-3 flex flex-col items-center gap-1 text-center transition-all"
+                style={{
+                  backgroundColor: hasRisk ? 'hsl(0 86% 97%)' : 'white',
+                  borderColor: hasRisk ? 'hsl(0 72% 70%)' : 'hsl(var(--border))',
+                }}
+              >
+                <AlertTriangle className="w-4 h-4" style={{ color: hasRisk ? 'hsl(0 72% 51%)' : 'var(--muted-foreground)' }} />
+                <span className="text-lg font-bold text-foreground leading-none">{riskCount}</span>
+                <span
+                  className="text-[10px] font-semibold"
+                  style={{ color: hasRisk ? 'hsl(0 72% 51%)' : 'var(--muted-foreground)' }}
+                >
+                  Riskler
+                </span>
+                <span className="text-[9px] text-muted-foreground leading-tight">{metrics?.overdueTaskCount ?? 0} gecikmiş</span>
+              </div>
+            );
+          })()}
+
+          {/* Kaynak Tahsisi */}
+          <div
+            className="bg-white rounded-lg border border-border p-3 flex flex-col items-center gap-1 text-center cursor-pointer hover:border-[hsl(174_72%_40%)] hover:bg-[hsl(174_72%_40%)]/5 hover:shadow-sm transition-all"
+            onClick={() => navigate(`/resources`)}
+            title="Kaynaklara git"
+          >
+            <Users className="w-4 h-4" style={{ color: 'hsl(174 72% 40%)' }} />
+            <span className="text-lg font-bold text-foreground leading-none">{metrics?.resourceCount ?? 0}</span>
+            <span className="text-[10px] font-semibold" style={{ color: 'hsl(174 72% 40%)' }}>Kaynak Tahsisi</span>
+            <span className="text-[9px] text-muted-foreground leading-tight">Atanan kaynak</span>
+          </div>
+        </div>
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1">
@@ -310,7 +345,12 @@ export function ProjectDetailPage() {
                     }
                   >
                     <SelectTrigger>
-                      <SelectValue />
+                      <SelectValue>
+                        {(() => {
+                          const id = formData.projectManagerId ?? project.projectManagerId;
+                          return users.find((u) => u.id === id)?.fullName ?? project.projectManagerName ?? '—';
+                        })()}
+                      </SelectValue>
                     </SelectTrigger>
                     <SelectContent>
                       {users.map((u) => (
@@ -381,12 +421,20 @@ export function ProjectDetailPage() {
                     }
                   >
                     <SelectTrigger>
-                      <SelectValue />
+                      <SelectValue>
+                        {(() => {
+                          const level = formData.privacyLevel ?? project.privacyLevel;
+                          if (level === PrivacyLevel.InviteOnly) return 'Sadece Davetliler';
+                          if (level === PrivacyLevel.AllEmployees) return 'Tüm Çalışanlar';
+                          if (level === PrivacyLevel.ClientVisible) return 'Müşteriye Görünür';
+                          return '—';
+                        })()}
+                      </SelectValue>
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value={String(PrivacyLevel.InviteOnly)}>Sadece Davetliler</SelectItem>
                       <SelectItem value={String(PrivacyLevel.AllEmployees)}>Tüm Çalışanlar</SelectItem>
-                      <SelectItem value={String(PrivacyLevel.ClientVisible)}>Müşteri Görünür</SelectItem>
+                      <SelectItem value={String(PrivacyLevel.ClientVisible)}>Müşteriye Görünür</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -404,7 +452,15 @@ export function ProjectDetailPage() {
                     }
                   >
                     <SelectTrigger>
-                      <SelectValue />
+                      <SelectValue>
+                        {(() => {
+                          const evaluation = formData.customerEvaluation ?? project.customerEvaluation;
+                          if (evaluation === EvaluationType.None) return 'Yok';
+                          if (evaluation === EvaluationType.Periodic) return 'Periyodik';
+                          if (evaluation === EvaluationType.OnStageChange) return 'Aşama Değişiminde';
+                          return '—';
+                        })()}
+                      </SelectValue>
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value={String(EvaluationType.None)}>Yok</SelectItem>
