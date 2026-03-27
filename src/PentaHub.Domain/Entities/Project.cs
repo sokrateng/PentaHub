@@ -25,4 +25,5 @@ public class Project : BaseEntity
     public User ProjectManager { get; set; } = null!;
     public ICollection<TaskStage> TaskStages { get; set; } = new List<TaskStage>();
     public ICollection<ProjectTask> Tasks { get; set; } = new List<ProjectTask>();
+    public ICollection<Sprint> Sprints { get; set; } = new List<Sprint>();
 }

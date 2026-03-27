@@ -22,6 +22,7 @@ public class ProjectTaskConfiguration : IEntityTypeConfiguration<ProjectTask>
         builder.HasOne(t => t.Stage).WithMany(s => s.Tasks).HasForeignKey(t => t.StageId).OnDelete(DeleteBehavior.Restrict);
         builder.HasOne(t => t.Assignee).WithMany().HasForeignKey(t => t.AssigneeId).OnDelete(DeleteBehavior.SetNull);
         builder.HasOne(t => t.ParentTask).WithMany(t => t.SubTasks).HasForeignKey(t => t.ParentTaskId).OnDelete(DeleteBehavior.Restrict);
+        builder.HasOne(t => t.Sprint).WithMany(s => s.Tasks).HasForeignKey(t => t.SprintId).OnDelete(DeleteBehavior.SetNull);
 
         builder.HasIndex(t => t.TaskNumber).IsUnique().HasDatabaseName("IX_Tasks_TaskNumber");
         builder.HasIndex(t => t.ProjectId).HasDatabaseName("IX_Tasks_ProjectId");

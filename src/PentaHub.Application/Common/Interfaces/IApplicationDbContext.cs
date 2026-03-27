@@ -9,5 +9,6 @@ public interface IApplicationDbContext
     DbSet<Project> Projects { get; }
     DbSet<TaskStage> TaskStages { get; }
     DbSet<ProjectTask> ProjectTasks { get; }
+    DbSet<Sprint> Sprints { get; }
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

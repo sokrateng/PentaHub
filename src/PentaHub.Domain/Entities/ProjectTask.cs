@@ -30,6 +30,7 @@ public class ProjectTask : BaseEntity
     public Project Project { get; set; } = null!;
     public TaskStage Stage { get; set; } = null!;
     public User? Assignee { get; set; }
+    public Sprint? Sprint { get; set; }
     public ProjectTask? ParentTask { get; set; }
     public ICollection<ProjectTask> SubTasks { get; set; } = new List<ProjectTask>();
 }

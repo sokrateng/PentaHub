@@ -153,3 +153,36 @@ export interface CreateTaskRequest {
   dueDate?: string;
   plannedHours: number;
 }
+
+export enum SprintState {
+  Draft = 0,
+  InProgress = 1,
+  Done = 2,
+}
+
+export interface Sprint {
+  id: number;
+  name: string;
+  projectId: number;
+  projectName?: string;
+  state: SprintState;
+  stateText?: string;
+  goal?: string;
+  startDate: string;
+  endDate: string;
+  taskCount: number;
+  completedTaskCount: number;
+  progressPercent: number;
+}
+
+export interface SprintDetail extends Sprint {
+  tasks: ProjectTask[];
+}
+
+export interface CreateSprintRequest {
+  name: string;
+  projectId: number;
+  goal?: string;
+  startDate: string;
+  endDate: string;
+}

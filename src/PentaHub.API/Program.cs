@@ -80,6 +80,7 @@ try
     app.MapUserEndpoints();
     app.MapTaskEndpoints();
     app.MapTaskStageEndpoints();
+    app.MapSprintEndpoints();
 
     // Auto-migrate and seed
     using (var scope = app.Services.CreateScope())

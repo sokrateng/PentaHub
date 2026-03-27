@@ -10,6 +10,9 @@ import type {
   TaskKanbanColumn,
   TaskStage,
   CreateTaskRequest,
+  Sprint,
+  SprintDetail,
+  CreateSprintRequest,
 } from '@/types';
 
 const api = axios.create({ baseURL: '/api' });
@@ -100,6 +103,44 @@ export const tasksApi = {
 export const taskStagesApi = {
   getByProject: async (projectId: number) => {
     const { data } = await api.get<ApiResponse<TaskStage[]>>(`/projects/${projectId}/task-stages`);
+    return data;
+  },
+};
+
+export const sprintsApi = {
+  getAll: async (params?: { projectId?: number; state?: number }) => {
+    const { data } = await api.get<ApiResponse<Sprint[]>>('/sprints', { params });
+    return data;
+  },
+  getById: async (id: number) => {
+    const { data } = await api.get<ApiResponse<SprintDetail>>(`/sprints/${id}`);
+    return data;
+  },
+  create: async (sprint: CreateSprintRequest) => {
+    const { data } = await api.post<ApiResponse<Sprint>>('/sprints', sprint);
+    return data;
+  },
+  update: async (id: number, sprint: CreateSprintRequest) => {
+    const { data } = await api.put<ApiResponse<Sprint>>(`/sprints/${id}`, sprint);
+    return data;
+  },
+  changeState: async (id: number, newState: number) => {
+    const { data } = await api.patch<ApiResponse<boolean>>(`/sprints/${id}/state`, { newState });
+    return data;
+  },
+  assignTask: async (id: number, taskId: number) => {
+    const { data } = await api.post<ApiResponse<boolean>>(`/sprints/${id}/assign-task`, { taskId });
+    return data;
+  },
+  removeTask: async (id: number, taskId: number) => {
+    const { data } = await api.post<ApiResponse<boolean>>(`/sprints/${id}/remove-task`, { taskId });
+    return data;
+  },
+};
+
+export const backlogApi = {
+  getByProject: async (projectId: number) => {
+    const { data } = await api.get<ApiResponse<ProjectTask[]>>(`/projects/${projectId}/backlog`);
     return data;
   },
 };
