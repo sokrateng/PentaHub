@@ -9,6 +9,7 @@ import {
   Clock,
   Building2,
   LogOut,
+  Settings,
 } from 'lucide-react';
 import { useAuthStore } from '@/stores/authStore';
 
@@ -128,6 +129,44 @@ export function Sidebar() {
           </NavLink>
         ))}
       </nav>
+
+      {/* Settings link */}
+      <div className="px-3 pb-1">
+        <NavLink
+          to="/settings"
+          className={({ isActive }) =>
+            [
+              'flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors duration-150 group relative',
+              isActive
+                ? 'text-white'
+                : 'text-[hsl(210_40%_70%)] hover:text-[hsl(210_40%_90%)]',
+            ].join(' ')
+          }
+          style={({ isActive }) =>
+            isActive ? { backgroundColor: 'hsl(220 20% 22%)' } : {}
+          }
+        >
+          {({ isActive }) => (
+            <>
+              {isActive && (
+                <span
+                  className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 rounded-r"
+                  style={{ backgroundColor: 'hsl(153 60% 48%)' }}
+                />
+              )}
+              <Settings
+                className={[
+                  'w-4 h-4 flex-shrink-0',
+                  isActive
+                    ? 'text-[hsl(153_60%_48%)]'
+                    : 'text-[hsl(210_40%_55%)] group-hover:text-[hsl(210_40%_75%)]',
+                ].join(' ')}
+              />
+              <span>Ayarlar</span>
+            </>
+          )}
+        </NavLink>
+      </div>
 
       {/* Bottom user section */}
       <div className="px-3 py-3 border-t" style={{ borderColor: 'hsl(220 20% 22%)' }}>

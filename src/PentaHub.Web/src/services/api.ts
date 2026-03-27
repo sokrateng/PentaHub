@@ -284,7 +284,7 @@ export const timeSheetsApi = {
 export const commentsApi = {
   getByEntity: async (entityType: string, entityId: number) => {
     const { data } = await api.get<ApiResponse<Comment[]>>(
-      `/${entityType.toLowerCase()}s/${entityId}/comments`
+      `/${entityType}/${entityId}/comments`
     );
     return data;
   },

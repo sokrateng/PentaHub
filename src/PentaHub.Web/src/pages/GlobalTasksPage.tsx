@@ -1,11 +1,21 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   Star,
   Calendar,
   User as UserIcon,
+  Plus,
 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
 import {
   Select,
   SelectContent,
@@ -22,8 +32,8 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { projectsApi, tasksApi } from '@/services/api';
-import type { ProjectTask, TaskKanbanColumn } from '@/types';
+import { projectsApi, tasksApi, usersApi } from '@/services/api';
+import type { ProjectTask, TaskKanbanColumn, CreateTaskRequest } from '@/types';
 
 function formatDate(dateStr?: string): string {
   if (!dateStr) return '—';
@@ -67,9 +77,34 @@ function flattenColumns(columns: TaskKanbanColumn[]): ProjectTask[] {
   return columns.flatMap((col) => col.tasks);
 }
 
+interface NewTaskForm {
+  title: string;
+  description: string;
+  assigneeId: string;
+  priority: string;
+  isBillable: boolean;
+  startDate: string;
+  dueDate: string;
+  plannedHours: string;
+}
+
+const defaultTaskForm: NewTaskForm = {
+  title: '',
+  description: '',
+  assigneeId: '',
+  priority: '0',
+  isBillable: false,
+  startDate: '',
+  dueDate: '',
+  plannedHours: '0',
+};
+
 export function GlobalTasksPage() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [selectedProjectId, setSelectedProjectId] = useState<string>('all');
+  const [taskDialogOpen, setTaskDialogOpen] = useState(false);
+  const [taskForm, setTaskForm] = useState<NewTaskForm>(defaultTaskForm);
 
   const { data: projectsResponse, isLoading: isLoadingProjects } = useQuery({
     queryKey: ['projects'],
@@ -86,6 +121,39 @@ export function GlobalTasksPage() {
     enabled: selectedId !== null,
   });
 
+  const { data: usersResponse } = useQuery({
+    queryKey: ['users'],
+    queryFn: () => usersApi.getAll(),
+  });
+
+  const users = usersResponse?.data ?? [];
+
+  const createTaskMutation = useMutation({
+    mutationFn: (payload: CreateTaskRequest) =>
+      tasksApi.create(selectedId!, payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['project-tasks', selectedId] });
+      setTaskDialogOpen(false);
+      setTaskForm(defaultTaskForm);
+    },
+  });
+
+  const handleCreateTask = () => {
+    if (!taskForm.title.trim() || selectedId === null) return;
+    const payload: CreateTaskRequest = {
+      title: taskForm.title.trim(),
+      description: taskForm.description || undefined,
+      projectId: selectedId,
+      assigneeId: taskForm.assigneeId ? Number(taskForm.assigneeId) : undefined,
+      priority: Number(taskForm.priority),
+      isBillable: taskForm.isBillable,
+      startDate: taskForm.startDate || undefined,
+      dueDate: taskForm.dueDate || undefined,
+      plannedHours: Number(taskForm.plannedHours) || 0,
+    };
+    createTaskMutation.mutate(payload);
+  };
+
   const tasks: ProjectTask[] = selectedId !== null
     ? flattenColumns(tasksResponse?.data ?? [])
     : [];
@@ -98,7 +166,7 @@ export function GlobalTasksPage() {
       <div className="flex items-center justify-between flex-wrap gap-3">
         <h1 className="text-xl font-bold text-foreground">Görevler</h1>
 
-        {/* Project filter */}
+        {/* Project filter + new task button */}
         <div className="flex items-center gap-2">
           <Select value={selectedProjectId} onValueChange={setSelectedProjectId}>
             <SelectTrigger className="h-8 w-[220px] text-xs">
@@ -113,6 +181,18 @@ export function GlobalTasksPage() {
               ))}
             </SelectContent>
           </Select>
+
+          {selectedProjectId !== 'all' && (
+            <Button
+              size="sm"
+              className="h-8 gap-1.5 text-xs"
+              style={{ backgroundColor: 'hsl(153 60% 33%)', color: 'white' }}
+              onClick={() => setTaskDialogOpen(true)}
+            >
+              <Plus className="w-3.5 h-3.5" />
+              Yeni Görev
+            </Button>
+          )}
         </div>
       </div>
 
@@ -234,6 +314,130 @@ export function GlobalTasksPage() {
           </Table>
         </div>
       )}
+
+      {/* New Task Dialog */}
+      <Dialog open={taskDialogOpen} onOpenChange={setTaskDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Yeni Görev Oluştur</DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4 py-2">
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium text-foreground">
+                Başlık <span className="text-destructive">*</span>
+              </label>
+              <Input
+                placeholder="Görev başlığı..."
+                value={taskForm.title}
+                onChange={(e) => setTaskForm((prev) => ({ ...prev, title: e.target.value }))}
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium text-foreground">Açıklama</label>
+              <textarea
+                placeholder="Görev açıklaması..."
+                value={taskForm.description}
+                onChange={(e) => setTaskForm((prev) => ({ ...prev, description: e.target.value }))}
+                className="w-full min-h-[72px] rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring resize-none"
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium text-foreground">Atanan Kişi</label>
+              <Select
+                value={taskForm.assigneeId}
+                onValueChange={(v) => setTaskForm((prev) => ({ ...prev, assigneeId: v }))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Kişi seçin..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {users.map((u) => (
+                    <SelectItem key={u.id} value={String(u.id)}>
+                      {u.fullName}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium text-foreground">Öncelik</label>
+              <Select
+                value={taskForm.priority}
+                onValueChange={(v) => setTaskForm((prev) => ({ ...prev, priority: v }))}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="0">Yok</SelectItem>
+                  <SelectItem value="1">Düşük</SelectItem>
+                  <SelectItem value="2">Normal</SelectItem>
+                  <SelectItem value="3">Yüksek</SelectItem>
+                  <SelectItem value="4">Acil</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium text-foreground">Başlangıç Tarihi</label>
+                <Input
+                  type="date"
+                  value={taskForm.startDate}
+                  onChange={(e) => setTaskForm((prev) => ({ ...prev, startDate: e.target.value }))}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium text-foreground">Bitiş Tarihi</label>
+                <Input
+                  type="date"
+                  value={taskForm.dueDate}
+                  onChange={(e) => setTaskForm((prev) => ({ ...prev, dueDate: e.target.value }))}
+                />
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium text-foreground">Planlanan Saat</label>
+              <Input
+                type="number"
+                min="0"
+                step="0.5"
+                placeholder="0"
+                value={taskForm.plannedHours}
+                onChange={(e) => setTaskForm((prev) => ({ ...prev, plannedHours: e.target.value }))}
+              />
+            </div>
+
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={taskForm.isBillable}
+                onChange={(e) => setTaskForm((prev) => ({ ...prev, isBillable: e.target.checked }))}
+                className="w-4 h-4 rounded border-border accent-primary"
+              />
+              <span className="text-sm font-medium">Faturalanabilir</span>
+            </label>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setTaskDialogOpen(false)}>
+              İptal
+            </Button>
+            <Button
+              onClick={handleCreateTask}
+              disabled={!taskForm.title.trim() || createTaskMutation.isPending}
+              style={{ backgroundColor: 'hsl(153 60% 33%)', color: 'white' }}
+            >
+              {createTaskMutation.isPending ? 'Oluşturuluyor...' : 'Oluştur'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -20,6 +20,7 @@ import { LoginPage } from '@/pages/LoginPage';
 import { RegisterPage } from '@/pages/RegisterPage';
 import { PlaceholderPage } from '@/pages/PlaceholderPage';
 import { GlobalTasksPage } from '@/pages/GlobalTasksPage';
+import { UserSettingsPage } from '@/pages/UserSettingsPage';
 import { useAuthStore } from '@/stores/authStore';
 
 const queryClient = new QueryClient({
@@ -62,6 +63,7 @@ function AppWithAuth() {
           <Route path="/timesheets" element={<UserTimeSheetsPage />} />
           <Route path="/contacts" element={<ContactsPage />} />
           <Route path="/contacts/:id" element={<ContactDetailPage />} />
+          <Route path="/settings" element={<UserSettingsPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
       </Route>

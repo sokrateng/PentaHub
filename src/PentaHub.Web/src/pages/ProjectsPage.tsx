@@ -722,11 +722,21 @@ export function ProjectsPage() {
             {/* Department */}
             <div className="space-y-1.5">
               <label className="text-sm font-medium text-foreground">Departman</label>
-              <Input
-                placeholder="Departman adı..."
+              <Select
                 value={form.departmentName}
-                onChange={(e) => setForm((prev) => ({ ...prev, departmentName: e.target.value }))}
-              />
+                onValueChange={(value) => setForm((prev) => ({ ...prev, departmentName: value }))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Departman seçin..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {['Yazılım', 'Satış', 'IT', 'İK', 'Pazarlama', 'Finans', 'Operasyon'].map((dept) => (
+                    <SelectItem key={dept} value={dept}>
+                      {dept}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             {/* Status */}
@@ -768,7 +778,7 @@ export function ProjectsPage() {
             </div>
 
             {/* Checkboxes */}
-            <div className="flex items-center gap-6">
+            <div className="space-y-3">
               <label className="flex items-center gap-2 cursor-pointer">
                 <input
                   type="checkbox"
@@ -778,15 +788,20 @@ export function ProjectsPage() {
                 />
                 <span className="text-sm font-medium">Faturalanabilir</span>
               </label>
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={form.isTemplate}
-                  onChange={(e) => setForm((prev) => ({ ...prev, isTemplate: e.target.checked }))}
-                  className="w-4 h-4 rounded border-border accent-primary"
-                />
-                <span className="text-sm font-medium">Şablon</span>
-              </label>
+              <div>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={form.isTemplate}
+                    onChange={(e) => setForm((prev) => ({ ...prev, isTemplate: e.target.checked }))}
+                    className="w-4 h-4 rounded border-border accent-primary"
+                  />
+                  <span className="text-sm font-medium">Şablon</span>
+                </label>
+                <p className="text-xs text-muted-foreground mt-1 ml-6">
+                  Şablon projeler, yeni projeler oluştururken referans olarak kullanılır.
+                </p>
+              </div>
             </div>
           </div>
 

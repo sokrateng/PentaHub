@@ -529,6 +529,21 @@ export function ResourcesPage() {
         </div>
       )}
 
+      {/* User management info */}
+      <div
+        className="flex items-center gap-3 px-4 py-3 rounded-lg border text-sm"
+        style={{ borderColor: 'hsl(153 60% 33% / 0.3)', backgroundColor: 'hsl(153 60% 33% / 0.05)' }}
+      >
+        <Users className="w-4 h-4 flex-shrink-0" style={{ color: 'hsl(153 60% 33%)' }} />
+        <span className="text-muted-foreground">
+          Kullanıcıları yönetmek için{' '}
+          <a href="/settings" className="font-medium underline" style={{ color: 'hsl(153 60% 33%)' }}>
+            Ayarlar sayfasını
+          </a>{' '}
+          kullanın.
+        </span>
+      </div>
+
       <AddResourceDialog
         open={addOpen}
         onClose={() => setAddOpen(false)}
