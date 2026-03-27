@@ -1,5 +1,16 @@
 import axios from 'axios';
-import type { ApiResponse, Project, ProjectListItem, ProjectStats, User, CreateProjectRequest } from '@/types';
+import type {
+  ApiResponse,
+  Project,
+  ProjectListItem,
+  ProjectStats,
+  User,
+  CreateProjectRequest,
+  ProjectTask,
+  TaskKanbanColumn,
+  TaskStage,
+  CreateTaskRequest,
+} from '@/types';
 
 const api = axios.create({ baseURL: '/api' });
 
@@ -55,6 +66,40 @@ export const projectsApi = {
 export const usersApi = {
   getAll: async () => {
     const { data } = await api.get<ApiResponse<User[]>>('/users');
+    return data;
+  },
+};
+
+export const tasksApi = {
+  getByProject: async (projectId: number) => {
+    const { data } = await api.get<ApiResponse<TaskKanbanColumn[]>>(`/projects/${projectId}/tasks`);
+    return data;
+  },
+  getById: async (id: number) => {
+    const { data } = await api.get<ApiResponse<ProjectTask>>(`/tasks/${id}`);
+    return data;
+  },
+  create: async (projectId: number, task: CreateTaskRequest) => {
+    const { data } = await api.post<ApiResponse<ProjectTask>>(`/projects/${projectId}/tasks`, task);
+    return data;
+  },
+  update: async (id: number, task: Partial<ProjectTask>) => {
+    const { data } = await api.put<ApiResponse<ProjectTask>>(`/tasks/${id}`, task);
+    return data;
+  },
+  moveStage: async (id: number, stageId: number) => {
+    const { data } = await api.patch<ApiResponse<boolean>>(`/tasks/${id}/stage`, { stageId });
+    return data;
+  },
+  delete: async (id: number) => {
+    const { data } = await api.delete<ApiResponse<boolean>>(`/tasks/${id}`);
+    return data;
+  },
+};
+
+export const taskStagesApi = {
+  getByProject: async (projectId: number) => {
+    const { data } = await api.get<ApiResponse<TaskStage[]>>(`/projects/${projectId}/task-stages`);
     return data;
   },
 };

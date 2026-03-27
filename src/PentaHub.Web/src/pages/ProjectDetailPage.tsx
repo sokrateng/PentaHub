@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   ChevronRight,
@@ -69,6 +69,7 @@ function formatDateForInput(dateStr?: string): string {
 
 export function ProjectDetailPage() {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const projectId = Number(id);
 
@@ -198,16 +199,31 @@ export function ProjectDetailPage() {
 
         {/* Metrics row */}
         <div className="grid grid-cols-7 gap-2">
-          {metrics.map(({ label, value, icon: Icon }) => (
-            <div
-              key={label}
-              className="bg-white rounded-lg border border-border p-3 flex flex-col items-center gap-1.5 text-center cursor-pointer hover:border-primary/40 hover:shadow-sm transition-all"
-            >
-              <Icon className="w-4 h-4 text-muted-foreground" />
-              <span className="text-lg font-bold text-foreground leading-none">{value}</span>
-              <span className="text-[10px] text-muted-foreground leading-tight">{label}</span>
-            </div>
-          ))}
+          {metrics.map(({ label, value, icon: Icon }) => {
+            const isTasksMetric = label === 'Görevler';
+            return (
+              <div
+                key={label}
+                onClick={isTasksMetric ? () => navigate(`/projects/${projectId}/tasks`) : undefined}
+                className={[
+                  'bg-white rounded-lg border border-border p-3 flex flex-col items-center gap-1.5 text-center cursor-pointer hover:border-primary/40 hover:shadow-sm transition-all',
+                  isTasksMetric ? 'hover:border-primary hover:bg-primary/5' : '',
+                ].join(' ')}
+              >
+                <Icon
+                  className="w-4 h-4"
+                  style={isTasksMetric ? { color: 'hsl(153 60% 33%)' } : { color: 'var(--muted-foreground)' }}
+                />
+                <span className="text-lg font-bold text-foreground leading-none">{value}</span>
+                <span
+                  className="text-[10px] leading-tight"
+                  style={isTasksMetric ? { color: 'hsl(153 60% 33%)', fontWeight: 600 } : { color: 'var(--muted-foreground)' }}
+                >
+                  {label}
+                </span>
+              </div>
+            );
+          })}
         </div>
 
         {/* Tabs */}

@@ -23,4 +23,6 @@ public class Project : BaseEntity
 
     // Navigation
     public User ProjectManager { get; set; } = null!;
+    public ICollection<TaskStage> TaskStages { get; set; } = new List<TaskStage>();
+    public ICollection<ProjectTask> Tasks { get; set; } = new List<ProjectTask>();
 }

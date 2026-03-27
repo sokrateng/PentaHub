@@ -98,3 +98,58 @@ export interface CreateProjectRequest {
   customerEvaluation: EvaluationType;
   evaluationFrequency?: string;
 }
+
+export interface TaskStage {
+  id: number;
+  projectId: number;
+  name: string;
+  sortOrder: number;
+  isDefault: boolean;
+  isClosedStage: boolean;
+  showInKanban: boolean;
+}
+
+export interface ProjectTask {
+  id: number;
+  taskNumber: string;
+  title: string;
+  description?: string;
+  projectId: number;
+  projectName?: string;
+  stageId: number;
+  stageName?: string;
+  assigneeId?: number;
+  assigneeName?: string;
+  priority: number;
+  priorityText?: string;
+  isBillable: boolean;
+  startDate?: string;
+  dueDate?: string;
+  plannedHours: number;
+  spentHours: number;
+  remainingHours: number;
+  progressPercent: number;
+  tags?: string;
+  sortOrder: number;
+  subTaskCount: number;
+  createdAt: string;
+}
+
+export interface TaskKanbanColumn {
+  stageId: number;
+  stageName: string;
+  sortOrder: number;
+  tasks: ProjectTask[];
+}
+
+export interface CreateTaskRequest {
+  title: string;
+  description?: string;
+  projectId: number;
+  assigneeId?: number;
+  priority: number;
+  isBillable: boolean;
+  startDate?: string;
+  dueDate?: string;
+  plannedHours: number;
+}

@@ -11,6 +11,8 @@ public class PentaHubDbContext : DbContext, IApplicationDbContext
 
     public DbSet<User> Users => Set<User>();
     public DbSet<Project> Projects => Set<Project>();
+    public DbSet<TaskStage> TaskStages => Set<TaskStage>();
+    public DbSet<ProjectTask> ProjectTasks => Set<ProjectTask>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -42,6 +44,61 @@ public class PentaHubDbContext : DbContext, IApplicationDbContext
             new Project { Id = 6, Name = "Veri Ambarı Modernizasyonu", Description = "Legacy veri ambarının bulut tabanlı çözüme taşınması", Status = ProjectStatus.Beklemede, ProjectManagerId = 4, DepartmentName = "IT", IsBillable = false, StartDate = new DateTime(2025, 5, 1, 0, 0, 0, DateTimeKind.Utc), EndDate = new DateTime(2025, 12, 31, 0, 0, 0, DateTimeKind.Utc), PrivacyLevel = PrivacyLevel.InviteOnly, CreatedAt = now },
             new Project { Id = 7, Name = "Müşteri Portalı Yenileme", Description = "Müşteri self-servis portalının yeniden tasarlanması", Status = ProjectStatus.DevamEden, ProjectManagerId = 2, DepartmentName = "Yazılım", IsBillable = true, StartDate = new DateTime(2025, 3, 1, 0, 0, 0, DateTimeKind.Utc), EndDate = new DateTime(2025, 7, 31, 0, 0, 0, DateTimeKind.Utc), PrivacyLevel = PrivacyLevel.ClientVisible, CreatedAt = now },
             new Project { Id = 8, Name = "Pazarlama Otomasyon Projesi", Description = "Marketing automation araçlarının entegrasyonu ve kampanya yönetimi", Status = ProjectStatus.Beklemede, ProjectManagerId = 5, DepartmentName = "Pazarlama", IsBillable = false, StartDate = new DateTime(2025, 6, 1, 0, 0, 0, DateTimeKind.Utc), EndDate = new DateTime(2025, 10, 31, 0, 0, 0, DateTimeKind.Utc), PrivacyLevel = PrivacyLevel.AllEmployees, CreatedAt = now }
+        );
+
+        // TaskStages seed - 5 stages per project, 8 projects = 40 stages total
+        var stageNames = new[] {
+            ("Yapılacak", 1, true, false),
+            ("Analiz", 2, false, false),
+            ("Devam Etmekte", 3, false, false),
+            ("Test Yapmak", 4, false, false),
+            ("Bitti", 5, false, true)
+        };
+
+        var taskStages = new List<TaskStage>();
+        for (int projectId = 1; projectId <= 8; projectId++)
+        {
+            for (int s = 0; s < stageNames.Length; s++)
+            {
+                var (name, sortOrder, isDefault, isClosedStage) = stageNames[s];
+                taskStages.Add(new TaskStage
+                {
+                    Id = (projectId - 1) * 5 + s + 1,
+                    ProjectId = projectId,
+                    Name = name,
+                    SortOrder = sortOrder,
+                    IsDefault = isDefault,
+                    IsClosedStage = isClosedStage,
+                    ShowInKanban = true,
+                    CreatedAt = now
+                });
+            }
+        }
+        modelBuilder.Entity<TaskStage>().HasData(taskStages);
+
+        // ProjectTasks seed - 15 tasks for project 1 "Acme Dijital Dönüşüm"
+        // Stage IDs for project 1: Yapılacak=1, Analiz=2, Devam Etmekte=3, Test Yapmak=4, Bitti=5
+        modelBuilder.Entity<ProjectTask>().HasData(
+            // Yapılacak (3 tasks)
+            new ProjectTask { Id = 1, TaskNumber = "T0001", Title = "CRM Modülünün Konfigürasyonu", ProjectId = 1, StageId = 1, AssigneeId = 1, Priority = Priority.High, IsBillable = true, PlannedHours = 16, SpentHours = 0, RemainingHours = 16, ProgressPercent = 0, SortOrder = 1, StartDate = new DateTime(2025, 1, 15, 0, 0, 0, DateTimeKind.Utc), DueDate = new DateTime(2025, 1, 31, 0, 0, 0, DateTimeKind.Utc), CreatedAt = now },
+            new ProjectTask { Id = 2, TaskNumber = "T0002", Title = "Kullanıcı Rol ve Yetkileri Tanımlama", ProjectId = 1, StageId = 1, AssigneeId = 2, Priority = Priority.Medium, IsBillable = true, PlannedHours = 8, SpentHours = 0, RemainingHours = 8, ProgressPercent = 0, SortOrder = 2, StartDate = new DateTime(2025, 1, 20, 0, 0, 0, DateTimeKind.Utc), DueDate = new DateTime(2025, 2, 5, 0, 0, 0, DateTimeKind.Utc), CreatedAt = now },
+            new ProjectTask { Id = 3, TaskNumber = "T0003", Title = "Veri Migrasyon Planı", ProjectId = 1, StageId = 1, AssigneeId = 3, Priority = Priority.Critical, IsBillable = true, PlannedHours = 24, SpentHours = 0, RemainingHours = 24, ProgressPercent = 0, SortOrder = 3, StartDate = new DateTime(2025, 1, 25, 0, 0, 0, DateTimeKind.Utc), DueDate = new DateTime(2025, 2, 15, 0, 0, 0, DateTimeKind.Utc), CreatedAt = now },
+            // Analiz (3 tasks)
+            new ProjectTask { Id = 4, TaskNumber = "T0004", Title = "API Entegrasyon Geliştirme", ProjectId = 1, StageId = 2, AssigneeId = 4, Priority = Priority.High, IsBillable = true, PlannedHours = 40, SpentHours = 8, RemainingHours = 32, ProgressPercent = 20, SortOrder = 1, StartDate = new DateTime(2025, 1, 15, 0, 0, 0, DateTimeKind.Utc), DueDate = new DateTime(2025, 2, 28, 0, 0, 0, DateTimeKind.Utc), CreatedAt = now },
+            new ProjectTask { Id = 5, TaskNumber = "T0005", Title = "UI/UX Tasarım Revizyonu", ProjectId = 1, StageId = 2, AssigneeId = 5, Priority = Priority.Medium, IsBillable = false, PlannedHours = 20, SpentHours = 4, RemainingHours = 16, ProgressPercent = 20, SortOrder = 2, StartDate = new DateTime(2025, 1, 20, 0, 0, 0, DateTimeKind.Utc), DueDate = new DateTime(2025, 2, 10, 0, 0, 0, DateTimeKind.Utc), CreatedAt = now },
+            new ProjectTask { Id = 6, TaskNumber = "T0006", Title = "Güvenlik Denetimi", ProjectId = 1, StageId = 2, AssigneeId = 1, Priority = Priority.Critical, IsBillable = true, PlannedHours = 16, SpentHours = 6, RemainingHours = 10, ProgressPercent = 38, SortOrder = 3, StartDate = new DateTime(2025, 2, 1, 0, 0, 0, DateTimeKind.Utc), DueDate = new DateTime(2025, 2, 20, 0, 0, 0, DateTimeKind.Utc), CreatedAt = now },
+            // Devam Etmekte (4 tasks)
+            new ProjectTask { Id = 7, TaskNumber = "T0007", Title = "Performans Testleri", ProjectId = 1, StageId = 3, AssigneeId = 2, Priority = Priority.Medium, IsBillable = true, PlannedHours = 24, SpentHours = 12, RemainingHours = 12, ProgressPercent = 50, SortOrder = 1, StartDate = new DateTime(2025, 2, 5, 0, 0, 0, DateTimeKind.Utc), DueDate = new DateTime(2025, 3, 5, 0, 0, 0, DateTimeKind.Utc), CreatedAt = now },
+            new ProjectTask { Id = 8, TaskNumber = "T0008", Title = "Raporlama Modülü", ProjectId = 1, StageId = 3, AssigneeId = 3, Priority = Priority.High, IsBillable = true, PlannedHours = 32, SpentHours = 16, RemainingHours = 16, ProgressPercent = 50, SortOrder = 2, StartDate = new DateTime(2025, 2, 10, 0, 0, 0, DateTimeKind.Utc), DueDate = new DateTime(2025, 3, 15, 0, 0, 0, DateTimeKind.Utc), CreatedAt = now },
+            new ProjectTask { Id = 9, TaskNumber = "T0009", Title = "Mobil Arayüz Geliştirme", ProjectId = 1, StageId = 3, AssigneeId = 4, Priority = Priority.Low, IsBillable = false, PlannedHours = 48, SpentHours = 20, RemainingHours = 28, ProgressPercent = 42, SortOrder = 3, StartDate = new DateTime(2025, 2, 15, 0, 0, 0, DateTimeKind.Utc), DueDate = new DateTime(2025, 4, 15, 0, 0, 0, DateTimeKind.Utc), CreatedAt = now },
+            new ProjectTask { Id = 10, TaskNumber = "T0010", Title = "Veritabanı Optimizasyonu", ProjectId = 1, StageId = 3, AssigneeId = 5, Priority = Priority.Medium, IsBillable = true, PlannedHours = 16, SpentHours = 10, RemainingHours = 6, ProgressPercent = 63, SortOrder = 4, StartDate = new DateTime(2025, 2, 20, 0, 0, 0, DateTimeKind.Utc), DueDate = new DateTime(2025, 3, 10, 0, 0, 0, DateTimeKind.Utc), CreatedAt = now },
+            // Test Yapmak (3 tasks)
+            new ProjectTask { Id = 11, TaskNumber = "T0011", Title = "Entegrasyon Testleri", ProjectId = 1, StageId = 4, AssigneeId = 1, Priority = Priority.High, IsBillable = true, PlannedHours = 20, SpentHours = 16, RemainingHours = 4, ProgressPercent = 80, SortOrder = 1, StartDate = new DateTime(2025, 3, 1, 0, 0, 0, DateTimeKind.Utc), DueDate = new DateTime(2025, 3, 20, 0, 0, 0, DateTimeKind.Utc), CreatedAt = now },
+            new ProjectTask { Id = 12, TaskNumber = "T0012", Title = "Kullanıcı Kabul Testleri", ProjectId = 1, StageId = 4, AssigneeId = 2, Priority = Priority.High, IsBillable = true, PlannedHours = 16, SpentHours = 12, RemainingHours = 4, ProgressPercent = 75, SortOrder = 2, StartDate = new DateTime(2025, 3, 5, 0, 0, 0, DateTimeKind.Utc), DueDate = new DateTime(2025, 3, 25, 0, 0, 0, DateTimeKind.Utc), CreatedAt = now },
+            new ProjectTask { Id = 13, TaskNumber = "T0013", Title = "Go-Live Planlaması", ProjectId = 1, StageId = 4, AssigneeId = 3, Priority = Priority.Critical, IsBillable = false, PlannedHours = 12, SpentHours = 8, RemainingHours = 4, ProgressPercent = 67, SortOrder = 3, StartDate = new DateTime(2025, 3, 10, 0, 0, 0, DateTimeKind.Utc), DueDate = new DateTime(2025, 4, 1, 0, 0, 0, DateTimeKind.Utc), CreatedAt = now },
+            // Bitti (2 tasks)
+            new ProjectTask { Id = 14, TaskNumber = "T0014", Title = "Eğitim Materyalleri Hazırlama", ProjectId = 1, StageId = 5, AssigneeId = 4, Priority = Priority.Low, IsBillable = false, PlannedHours = 12, SpentHours = 12, RemainingHours = 0, ProgressPercent = 100, SortOrder = 1, StartDate = new DateTime(2025, 1, 15, 0, 0, 0, DateTimeKind.Utc), DueDate = new DateTime(2025, 2, 1, 0, 0, 0, DateTimeKind.Utc), CreatedAt = now },
+            new ProjectTask { Id = 15, TaskNumber = "T0015", Title = "Dokümantasyon", ProjectId = 1, StageId = 5, AssigneeId = 5, Priority = Priority.None, IsBillable = false, PlannedHours = 8, SpentHours = 8, RemainingHours = 0, ProgressPercent = 100, SortOrder = 2, StartDate = new DateTime(2025, 1, 15, 0, 0, 0, DateTimeKind.Utc), DueDate = new DateTime(2025, 1, 31, 0, 0, 0, DateTimeKind.Utc), CreatedAt = now }
         );
     }
 

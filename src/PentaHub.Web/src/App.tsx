@@ -3,6 +3,8 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AppShell } from '@/components/layout/AppShell';
 import { ProjectsPage } from '@/pages/ProjectsPage';
 import { ProjectDetailPage } from '@/pages/ProjectDetailPage';
+import { TasksPage } from '@/pages/TasksPage';
+import { TaskDetailPage } from '@/pages/TaskDetailPage';
 import { PlaceholderPage } from '@/pages/PlaceholderPage';
 
 const queryClient = new QueryClient({
@@ -24,7 +26,9 @@ function App() {
             <Route path="/dashboard" element={<PlaceholderPage />} />
             <Route path="/projects" element={<ProjectsPage />} />
             <Route path="/projects/:id" element={<ProjectDetailPage />} />
+            <Route path="/projects/:projectId/tasks" element={<TasksPage />} />
             <Route path="/tasks" element={<PlaceholderPage />} />
+            <Route path="/tasks/:id" element={<TaskDetailPage />} />
             <Route path="/sprints" element={<PlaceholderPage />} />
             <Route path="/backlog" element={<PlaceholderPage />} />
             <Route path="/resources" element={<PlaceholderPage />} />

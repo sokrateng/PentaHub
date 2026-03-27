@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using PentaHub.Infrastructure.Data;
 
@@ -10,9 +11,11 @@ using PentaHub.Infrastructure.Data;
 namespace PentaHub.Infrastructure.Migrations
 {
     [DbContext(typeof(PentaHubDbContext))]
-    partial class PentaHubDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260327204051_AddTaskManagement")]
+    partial class AddTaskManagement
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "9.0.14");
