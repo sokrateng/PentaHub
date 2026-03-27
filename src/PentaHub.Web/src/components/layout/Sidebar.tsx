@@ -15,7 +15,7 @@ interface NavItem {
 }
 
 const navItems: NavItem[] = [
-  { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { to: '/', label: 'Dashboard', icon: LayoutDashboard },
   { to: '/projects', label: 'Projeler', icon: FolderKanban },
   { to: '/tasks', label: 'Görevler', icon: ListTodo },
   { to: '/sprints', label: 'Sprintler', icon: Zap },
@@ -48,6 +48,7 @@ export function Sidebar() {
           <NavLink
             key={to}
             to={to}
+            end={to === '/'}
             className={({ isActive }) =>
               [
                 'flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors duration-150 group relative',

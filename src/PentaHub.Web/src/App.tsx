@@ -1,6 +1,7 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AppShell } from '@/components/layout/AppShell';
+import { DashboardPage } from '@/pages/DashboardPage';
 import { ProjectsPage } from '@/pages/ProjectsPage';
 import { ProjectDetailPage } from '@/pages/ProjectDetailPage';
 import { TasksPage } from '@/pages/TasksPage';
@@ -27,8 +28,8 @@ function App() {
       <BrowserRouter>
         <Routes>
           <Route element={<AppShell />}>
-            <Route path="/" element={<Navigate to="/projects" replace />} />
-            <Route path="/dashboard" element={<PlaceholderPage />} />
+            <Route path="/" element={<DashboardPage />} />
+            <Route path="/dashboard" element={<Navigate to="/" replace />} />
             <Route path="/projects" element={<ProjectsPage />} />
             <Route path="/projects/:id" element={<ProjectDetailPage />} />
             <Route path="/projects/:projectId/tasks" element={<TasksPage />} />
@@ -39,7 +40,7 @@ function App() {
             <Route path="/sprints/:id" element={<SprintDetailPage />} />
             <Route path="/backlog" element={<BacklogPage />} />
             <Route path="/resources" element={<ResourcesPage />} />
-            <Route path="*" element={<Navigate to="/projects" replace />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
           </Route>
         </Routes>
       </BrowserRouter>

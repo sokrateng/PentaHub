@@ -2,6 +2,9 @@ using PentaHub.Application;
 using PentaHub.Infrastructure;
 using PentaHub.Infrastructure.Data;
 using PentaHub.API.Endpoints;
+using PentaHub.API.Hubs;
+using PentaHub.API.Services;
+using PentaHub.Application.Common.Interfaces;
 using Serilog;
 using Microsoft.EntityFrameworkCore;
 using FluentValidation;
@@ -22,6 +25,10 @@ try
 
     builder.Services.AddApplication();
     builder.Services.AddInfrastructure(connectionString);
+
+    // SignalR
+    builder.Services.AddSignalR();
+    builder.Services.AddScoped<IHubNotificationService, HubNotificationService>();
 
     // Swagger
     builder.Services.AddEndpointsApiExplorer();
@@ -86,6 +93,10 @@ try
     app.MapResourceEndpoints();
     app.MapMilestoneEndpoints();
     app.MapTimeSheetEndpoints();
+    app.MapCommentEndpoints();
+
+    // SignalR Hub
+    app.MapHub<CollaborationHub>("/hubs/collaboration");
 
     // Auto-migrate and seed
     using (var scope = app.Services.CreateScope())

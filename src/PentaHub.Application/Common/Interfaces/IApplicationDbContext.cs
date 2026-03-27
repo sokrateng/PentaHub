@@ -15,5 +15,6 @@ public interface IApplicationDbContext
     DbSet<Milestone> Milestones { get; }
     DbSet<ResourceAllocation> ResourceAllocations { get; }
     DbSet<TimeSheet> TimeSheets { get; }
+    DbSet<Comment> Comments { get; }
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

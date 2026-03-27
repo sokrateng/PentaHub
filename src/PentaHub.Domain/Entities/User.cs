@@ -16,4 +16,5 @@ public class User : BaseEntity
     public ICollection<Project> ManagedProjects { get; set; } = new List<Project>();
     public ICollection<ResourceAllocation> ResourceAllocations { get; set; } = new List<ResourceAllocation>();
     public ICollection<TimeSheet> TimeSheets { get; set; } = new List<TimeSheet>();
+    public ICollection<Comment> Comments { get; set; } = new List<Comment>();
 }

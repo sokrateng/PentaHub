@@ -295,3 +295,34 @@ export interface CreateTimeSheetRequest {
   description?: string;
   isBillable: boolean;
 }
+
+// --- FAZ 3A: Collaboration ---
+
+export enum CommentType {
+  Note = 0,
+  Email = 1,
+  SystemLog = 2,
+  Meeting = 3,
+}
+
+export interface Comment {
+  id: number;
+  entityType: string;
+  entityId: number;
+  authorId: number;
+  authorName: string;
+  authorAvatarUrl?: string;
+  content: string;
+  commentType: CommentType;
+  commentTypeText: string;
+  isInternal: boolean;
+  createdAt: string;
+}
+
+export interface CreateCommentRequest {
+  entityType: 'Project' | 'Task';
+  entityId: number;
+  content: string;
+  commentType: CommentType;
+  isInternal: boolean;
+}

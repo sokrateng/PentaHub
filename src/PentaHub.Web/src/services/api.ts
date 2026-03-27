@@ -23,6 +23,8 @@ import type {
   UpdateMilestoneRequest,
   TimeSheet,
   CreateTimeSheetRequest,
+  Comment,
+  CreateCommentRequest,
 } from '@/types';
 
 const api = axios.create({ baseURL: '/api' });
@@ -247,6 +249,23 @@ export const timeSheetsApi = {
   },
   delete: async (id: number) => {
     const { data } = await api.delete<ApiResponse<boolean>>(`/timesheets/${id}`);
+    return data;
+  },
+};
+
+export const commentsApi = {
+  getByEntity: async (entityType: string, entityId: number) => {
+    const { data } = await api.get<ApiResponse<Comment[]>>(
+      `/${entityType.toLowerCase()}s/${entityId}/comments`
+    );
+    return data;
+  },
+  add: async (comment: CreateCommentRequest) => {
+    const { data } = await api.post<ApiResponse<Comment>>('/comments', comment);
+    return data;
+  },
+  delete: async (id: number) => {
+    const { data } = await api.delete<ApiResponse<boolean>>(`/comments/${id}`);
     return data;
   },
 };

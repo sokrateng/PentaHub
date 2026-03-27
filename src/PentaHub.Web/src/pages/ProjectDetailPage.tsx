@@ -11,8 +11,6 @@ import {
   AlertTriangle,
   Users,
   Save,
-  MessageSquare,
-  Send,
 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -30,6 +28,7 @@ import { projectsApi, usersApi } from '@/services/api';
 import { ProjectStatus, PrivacyLevel, EvaluationType } from '@/types';
 import type { CreateProjectRequest } from '@/types';
 import { MilestonesTab } from '@/components/projects/MilestonesTab';
+import { CollaborationPanel } from '@/components/collaboration/CollaborationPanel';
 
 interface MetricItem {
   label: string;
@@ -453,54 +452,7 @@ export function ProjectDetailPage() {
       </div>
 
       {/* Collaboration panel */}
-      <div
-        className="w-[340px] flex-shrink-0 bg-white border-l border-border flex flex-col -mr-6 -mt-5 -mb-6"
-        style={{ marginRight: '-1.5rem', marginTop: '-1.25rem', marginBottom: '-1.5rem' }}
-      >
-        {/* Panel header */}
-        <div className="px-4 py-3.5 border-b border-border flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <MessageSquare className="w-4 h-4 text-muted-foreground" />
-            <span className="text-sm font-semibold text-foreground">Kolaborasyon</span>
-          </div>
-          <Badge variant="secondary" className="text-xs px-2 py-0.5">
-            0 mesaj
-          </Badge>
-        </div>
-
-        {/* Messages area */}
-        <div className="flex-1 overflow-y-auto px-4 py-4">
-          <div className="flex flex-col items-center justify-center h-full text-center py-12">
-            <div
-              className="w-12 h-12 rounded-xl flex items-center justify-center mb-3"
-              style={{ backgroundColor: 'hsl(153 60% 33% / 0.08)' }}
-            >
-              <MessageSquare className="w-5 h-5" style={{ color: 'hsl(153 60% 33%)' }} />
-            </div>
-            <p className="text-sm font-medium text-foreground mb-1">Henüz mesaj yok</p>
-            <p className="text-xs text-muted-foreground">
-              Proje hakkında mesaj göndermek için aşağıdaki alanı kullanın
-            </p>
-          </div>
-        </div>
-
-        {/* Message input */}
-        <div className="px-4 py-3 border-t border-border">
-          <div className="flex items-center gap-2">
-            <Input
-              placeholder="Mesaj yazın..."
-              className="flex-1 text-sm h-9"
-            />
-            <button
-              className="w-9 h-9 rounded-md flex items-center justify-center text-white flex-shrink-0 hover:opacity-90 transition-opacity"
-              style={{ backgroundColor: 'hsl(153 60% 33%)' }}
-              aria-label="Gönder"
-            >
-              <Send className="w-3.5 h-3.5" />
-            </button>
-          </div>
-        </div>
-      </div>
+      <CollaborationPanel entityType="Project" entityId={projectId} />
     </div>
   );
 }

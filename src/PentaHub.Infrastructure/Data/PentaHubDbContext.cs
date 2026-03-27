@@ -3,6 +3,7 @@ using PentaHub.Application.Common.Interfaces;
 using PentaHub.Domain.Entities;
 using PentaHub.Domain.Enums;
 using PentaHub.Domain.Common;
+using CommentTypeEnum = PentaHub.Domain.Enums.CommentType;
 
 namespace PentaHub.Infrastructure.Data;
 
@@ -20,6 +21,7 @@ public class PentaHubDbContext : DbContext, IApplicationDbContext
     public DbSet<Milestone> Milestones => Set<Milestone>();
     public DbSet<ResourceAllocation> ResourceAllocations => Set<ResourceAllocation>();
     public DbSet<TimeSheet> TimeSheets => Set<TimeSheet>();
+    public DbSet<Comment> Comments => Set<Comment>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -151,6 +153,15 @@ public class PentaHubDbContext : DbContext, IApplicationDbContext
             new ResourceAllocation { Id = 3, UserId = 3, ProjectId = 1, StartDate = new DateTime(2025, 2, 1, 0, 0, 0, DateTimeKind.Utc), EndDate = new DateTime(2025, 5, 31, 0, 0, 0, DateTimeKind.Utc), HoursPerDay = 4, TotalHours = 320, Notes = "Kıdemli geliştirici yarı zamanlı", CreatedAt = now },
             new ResourceAllocation { Id = 4, UserId = 4, ProjectId = 1, StartDate = new DateTime(2025, 1, 15, 0, 0, 0, DateTimeKind.Utc), EndDate = new DateTime(2025, 6, 30, 0, 0, 0, DateTimeKind.Utc), HoursPerDay = 5, TotalHours = 550, Notes = "IT uzmanı proje süresince", CreatedAt = now },
             new ResourceAllocation { Id = 5, UserId = 5, ProjectId = 1, StartDate = new DateTime(2025, 3, 1, 0, 0, 0, DateTimeKind.Utc), EndDate = new DateTime(2025, 6, 30, 0, 0, 0, DateTimeKind.Utc), HoursPerDay = 7, TotalHours = 560, Notes = "Pazarlama & test uzmanı", CreatedAt = now }
+        );
+
+        // Comments seed - 5 comments for project 1 (mix of Note and SystemLog types)
+        modelBuilder.Entity<Comment>().HasData(
+            new Comment { Id = 1, EntityType = "Project", EntityId = 1, AuthorId = 1, Content = "<p>Proje başlangıç toplantısı gerçekleştirildi. Tüm ekip üyeleri görevlerini teslim aldı.</p>", CommentType = CommentTypeEnum.Note, IsInternal = true, CreatedAt = now },
+            new Comment { Id = 2, EntityType = "Project", EntityId = 1, AuthorId = 2, Content = "<p>Müşteri ile sprint planlaması görüşmesi yapıldı. Öncelikli özellikler belirlendi.</p>", CommentType = CommentTypeEnum.Note, IsInternal = false, CreatedAt = new DateTime(2025, 1, 20, 0, 0, 0, DateTimeKind.Utc) },
+            new Comment { Id = 3, EntityType = "Project", EntityId = 1, AuthorId = 1, Content = "<p>Proje durumu: DevamEden olarak güncellendi.</p>", CommentType = CommentTypeEnum.SystemLog, IsInternal = true, CreatedAt = new DateTime(2025, 1, 15, 0, 0, 0, DateTimeKind.Utc) },
+            new Comment { Id = 4, EntityType = "Project", EntityId = 1, AuthorId = 3, Content = "<p>Haftalık durum toplantısı yapıldı. API entegrasyon geliştirme %20 tamamlandı.</p>", CommentType = CommentTypeEnum.Meeting, IsInternal = true, CreatedAt = new DateTime(2025, 1, 25, 0, 0, 0, DateTimeKind.Utc) },
+            new Comment { Id = 5, EntityType = "Project", EntityId = 1, AuthorId = 4, Content = "<p>Veri migrasyon planı onaylandı. Geliştirme ekibi bilgilendirildi.</p>", CommentType = CommentTypeEnum.SystemLog, IsInternal = true, CreatedAt = new DateTime(2025, 2, 1, 0, 0, 0, DateTimeKind.Utc) }
         );
 
         // TimeSheets seed - 10 entries for various tasks in project 1
