@@ -218,11 +218,11 @@ export function TaskDetailPage() {
 
         {/* Stage bar */}
         {stages.length > 0 && (
-          <div className="bg-white rounded-xl border border-border p-1 flex items-stretch gap-0 overflow-hidden overflow-x-auto">
+          <div className="bg-white rounded-xl border border-border p-1 flex items-stretch gap-1 flex-wrap">
             {stages
               .slice()
               .sort((a, b) => a.sortOrder - b.sortOrder)
-              .map((stage, idx) => {
+              .map((stage) => {
                 const isActive = task.stageId === stage.id;
                 return (
                   <button
@@ -230,16 +230,13 @@ export function TaskDetailPage() {
                     onClick={() => !isActive && stageMutation.mutate(stage.id)}
                     disabled={stageMutation.isPending}
                     className={[
-                      'flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-150 relative whitespace-nowrap',
+                      'flex-1 min-w-[100px] flex items-center justify-center px-3 py-2 rounded-lg text-sm font-medium transition-all duration-150',
                       isActive
                         ? 'text-white'
                         : 'text-muted-foreground hover:bg-muted/60',
                     ].join(' ')}
                     style={isActive ? { backgroundColor: 'hsl(153 60% 33%)' } : {}}
                   >
-                    {idx > 0 && !isActive && (
-                      <ChevronRight className="w-3.5 h-3.5 opacity-40 absolute left-1" />
-                    )}
                     {stage.name}
                   </button>
                 );
@@ -276,10 +273,14 @@ export function TaskDetailPage() {
                 onValueChange={(v) => setFormData((prev) => ({ ...prev, assigneeId: v }))}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Kişi seçin..." />
+                  <SelectValue placeholder="Kişi seçin...">
+                    {currentAssigneeId
+                      ? users.find((u) => String(u.id) === currentAssigneeId)?.fullName ?? 'Kişi seçin...'
+                      : 'Atanmamış'}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Atanmamış</SelectItem>
+                  <SelectItem value="0">Atanmamış</SelectItem>
                   {users.map((u) => (
                     <SelectItem key={u.id} value={String(u.id)}>
                       {u.fullName}
