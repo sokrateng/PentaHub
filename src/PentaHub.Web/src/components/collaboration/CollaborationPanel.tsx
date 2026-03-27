@@ -83,7 +83,7 @@ function filterComments(comments: Comment[], filter: FilterType): Comment[] {
 }
 
 interface CollaborationPanelProps {
-  entityType: 'Project' | 'Task';
+  entityType: 'Project' | 'Task' | 'Contact';
   entityId: number;
 }
 
@@ -185,8 +185,12 @@ export function CollaborationPanel({ entityType, entityId }: CollaborationPanelP
             </div>
             <p className="text-sm font-medium text-foreground mb-1">Henüz mesaj yok</p>
             <p className="text-xs text-muted-foreground">
-              {entityType === 'Project' ? 'Proje' : 'Görev'} hakkında mesaj göndermek için
-              aşağıdaki alanı kullanın
+              {entityType === 'Project'
+                ? 'Proje'
+                : entityType === 'Task'
+                  ? 'Görev'
+                  : 'Kontak'}{' '}
+              hakkında mesaj göndermek için aşağıdaki alanı kullanın
             </p>
           </div>
         ) : (

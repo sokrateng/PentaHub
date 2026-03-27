@@ -7,6 +7,9 @@ using PentaHub.API.Services;
 using PentaHub.Application.Common.Interfaces;
 using Serilog;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 using FluentValidation;
 
 Log.Logger = new LoggerConfiguration()
@@ -25,6 +28,31 @@ try
 
     builder.Services.AddApplication();
     builder.Services.AddInfrastructure(connectionString);
+
+    // JWT Settings
+    builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("JwtSettings"));
+    builder.Services.AddScoped<IJwtService, JwtService>();
+
+    // JWT Authentication
+    var jwtSettings = builder.Configuration.GetSection("JwtSettings");
+    var secret = jwtSettings["Secret"] ?? "PentaHub-Super-Secret-Key-That-Is-At-Least-32-Characters-Long-2025";
+
+    builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+        .AddJwtBearer(options =>
+        {
+            options.TokenValidationParameters = new TokenValidationParameters
+            {
+                ValidateIssuer = true,
+                ValidateAudience = true,
+                ValidateLifetime = true,
+                ValidateIssuerSigningKey = true,
+                ValidIssuer = jwtSettings["Issuer"] ?? "PentaHub",
+                ValidAudience = jwtSettings["Audience"] ?? "PentaHub-Web",
+                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secret))
+            };
+        });
+
+    builder.Services.AddAuthorization();
 
     // SignalR
     builder.Services.AddSignalR();
@@ -74,6 +102,7 @@ try
             {
                 ValidationException validationEx => (400, string.Join("; ", validationEx.Errors.Select(e => e.ErrorMessage))),
                 KeyNotFoundException => (404, exception.Message),
+                InvalidOperationException => (400, exception.Message),
                 _ => (500, "Beklenmeyen bir hata oluştu.")
             };
 
@@ -81,6 +110,9 @@ try
             await context.Response.WriteAsJsonAsync(new { success = false, error = message });
         });
     });
+
+    app.UseAuthentication();
+    app.UseAuthorization();
 
     // Endpoints
     app.MapProjectEndpoints();
@@ -94,6 +126,8 @@ try
     app.MapMilestoneEndpoints();
     app.MapTimeSheetEndpoints();
     app.MapCommentEndpoints();
+    app.MapContactEndpoints();
+    app.MapAuthEndpoints();
 
     // SignalR Hub
     app.MapHub<CollaborationHub>("/hubs/collaboration");

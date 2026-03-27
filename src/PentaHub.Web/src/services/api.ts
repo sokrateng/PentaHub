@@ -25,9 +25,37 @@ import type {
   CreateTimeSheetRequest,
   Comment,
   CreateCommentRequest,
+  Contact,
+  ContactListItem,
+  CreateContactRequest,
+  LoginRequest,
+  RegisterRequest,
+  LoginResponse,
 } from '@/types';
 
 const api = axios.create({ baseURL: '/api' });
+
+// Request interceptor: attach JWT token
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem('auth_token');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
+// Response interceptor: handle 401
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      localStorage.removeItem('auth_token');
+      localStorage.removeItem('auth_user');
+      window.location.href = '/login';
+    }
+    return Promise.reject(error);
+  }
+);
 
 export const projectsApi = {
   getAll: async (params?: {
@@ -266,6 +294,61 @@ export const commentsApi = {
   },
   delete: async (id: number) => {
     const { data } = await api.delete<ApiResponse<boolean>>(`/comments/${id}`);
+    return data;
+  },
+};
+
+export const contactsApi = {
+  getAll: async (params?: {
+    search?: string;
+    city?: string;
+    country?: string;
+    page?: number;
+    pageSize?: number;
+  }) => {
+    const { data } = await api.get<ApiResponse<ContactListItem[]>>('/contacts', { params });
+    return data;
+  },
+
+  getById: async (id: number) => {
+    const { data } = await api.get<ApiResponse<Contact>>(`/contacts/${id}`);
+    return data;
+  },
+
+  create: async (contact: CreateContactRequest) => {
+    const { data } = await api.post<ApiResponse<Contact>>('/contacts', contact);
+    return data;
+  },
+
+  update: async (id: number, contact: CreateContactRequest) => {
+    const { data } = await api.put<ApiResponse<Contact>>(`/contacts/${id}`, contact);
+    return data;
+  },
+
+  delete: async (id: number) => {
+    const { data } = await api.delete<ApiResponse<boolean>>(`/contacts/${id}`);
+    return data;
+  },
+};
+
+export const authApi = {
+  login: async (credentials: LoginRequest) => {
+    const { data } = await api.post<ApiResponse<LoginResponse>>('/auth/login', credentials);
+    return data;
+  },
+
+  register: async (request: RegisterRequest) => {
+    const { data } = await api.post<ApiResponse<LoginResponse>>('/auth/register', request);
+    return data;
+  },
+
+  refresh: async (refreshToken: string) => {
+    const { data } = await api.post<ApiResponse<LoginResponse>>('/auth/refresh', { refreshToken });
+    return data;
+  },
+
+  me: async () => {
+    const { data } = await api.get<ApiResponse<User>>('/auth/me');
     return data;
   },
 };

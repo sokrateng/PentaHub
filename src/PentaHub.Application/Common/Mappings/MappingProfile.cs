@@ -16,5 +16,8 @@ public class MappingProfile : Profile
             .ForMember(d => d.TaskCount, opt => opt.Ignore());
 
         CreateMap<User, UserDto>();
+
+        CreateMap<Contact, ContactDto>();
+        CreateMap<Contact, ContactListDto>();
     }
 }

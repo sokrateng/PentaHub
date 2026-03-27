@@ -11,6 +11,8 @@ public class User : BaseEntity
     public string Role { get; set; } = "User";
     public string? Department { get; set; }
     public bool IsActive { get; set; } = true;
+    public string? RefreshToken { get; set; }
+    public DateTime? RefreshTokenExpiryTime { get; set; }
 
     // Navigation
     public ICollection<Project> ManagedProjects { get; set; } = new List<Project>();

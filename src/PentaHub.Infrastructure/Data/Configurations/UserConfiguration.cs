@@ -17,6 +17,8 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
         builder.Property(u => u.Role).IsRequired().HasMaxLength(50).HasDefaultValue("User");
         builder.Property(u => u.Department).HasMaxLength(100);
         builder.Property(u => u.IsActive).HasDefaultValue(true);
+        builder.Property(u => u.RefreshToken).HasMaxLength(500);
+        builder.Property(u => u.RefreshTokenExpiryTime);
 
         builder.HasIndex(u => u.Email).IsUnique();
         builder.HasQueryFilter(u => !u.IsDeleted);

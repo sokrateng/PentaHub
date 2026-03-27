@@ -320,9 +320,73 @@ export interface Comment {
 }
 
 export interface CreateCommentRequest {
-  entityType: 'Project' | 'Task';
+  entityType: 'Project' | 'Task' | 'Contact';
   entityId: number;
   content: string;
   commentType: CommentType;
   isInternal: boolean;
+}
+
+// --- FAZ 3C: Contacts ---
+
+export interface Contact {
+  id: number;
+  companyName: string;
+  contactPersonName?: string;
+  email?: string;
+  phone?: string;
+  mobile?: string;
+  website?: string;
+  address?: string;
+  city?: string;
+  country?: string;
+  tags?: string;
+  createdAt: string;
+}
+
+export interface ContactListItem {
+  id: number;
+  companyName: string;
+  contactPersonName?: string;
+  email?: string;
+  phone?: string;
+  mobile?: string;
+  city?: string;
+  country?: string;
+  tags?: string;
+  createdAt: string;
+}
+
+export interface CreateContactRequest {
+  companyName: string;
+  contactPersonName?: string;
+  email?: string;
+  phone?: string;
+  mobile?: string;
+  website?: string;
+  address?: string;
+  city?: string;
+  country?: string;
+  tags?: string;
+}
+
+// --- FAZ 4: Authentication ---
+
+export interface LoginRequest {
+  email: string;
+  password: string;
+}
+
+export interface RegisterRequest {
+  fullName: string;
+  email: string;
+  password: string;
+  department?: string;
+}
+
+export interface LoginResponse {
+  token: string;
+  refreshToken: string;
+  expiresAt: string;
+  user: User;
 }

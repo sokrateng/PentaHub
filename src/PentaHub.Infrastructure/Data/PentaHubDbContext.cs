@@ -22,6 +22,7 @@ public class PentaHubDbContext : DbContext, IApplicationDbContext
     public DbSet<ResourceAllocation> ResourceAllocations => Set<ResourceAllocation>();
     public DbSet<TimeSheet> TimeSheets => Set<TimeSheet>();
     public DbSet<Comment> Comments => Set<Comment>();
+    public DbSet<Contact> Contacts => Set<Contact>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -35,6 +36,14 @@ public class PentaHubDbContext : DbContext, IApplicationDbContext
     private static void SeedData(ModelBuilder modelBuilder)
     {
         var now = new DateTime(2025, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+
+        modelBuilder.Entity<Contact>().HasData(
+            new Contact { Id = 1, CompanyName = "Acme Corp", ContactPersonName = "John Smith", Email = "john.smith@acme.com", Phone = "+90 212 555 0101", City = "İstanbul", Country = "Türkiye", Tags = "müşteri,teknoloji", CreatedAt = now },
+            new Contact { Id = 2, CompanyName = "TechVision Ltd", ContactPersonName = "Emily Johnson", Email = "emily.johnson@techvision.com", Phone = "+90 312 555 0202", City = "Ankara", Country = "Türkiye", Tags = "yazılım,partner", CreatedAt = now },
+            new Contact { Id = 3, CompanyName = "GlobalTrade Inc", ContactPersonName = "Michael Brown", Email = "m.brown@globaltrade.com", Phone = "+90 232 555 0303", City = "İzmir", Country = "Türkiye", Tags = "ticaret,ihracat", CreatedAt = now },
+            new Contact { Id = 4, CompanyName = "DataSoft Bilişim", ContactPersonName = "Ayşe Kaya", Email = "ayse.kaya@datasoft.com.tr", Phone = "+90 216 555 0404", Mobile = "+90 532 555 0404", City = "İstanbul", Country = "Türkiye", Website = "https://www.datasoft.com.tr", Tags = "yazılım,veri", CreatedAt = now },
+            new Contact { Id = 5, CompanyName = "MegaRetail A.Ş.", ContactPersonName = "Mehmet Demir", Email = "mehmet.demir@megaretail.com.tr", Phone = "+90 224 555 0505", Mobile = "+90 542 555 0505", City = "Bursa", Country = "Türkiye", Website = "https://www.megaretail.com.tr", Tags = "perakende,e-ticaret", CreatedAt = now }
+        );
 
         modelBuilder.Entity<User>().HasData(
             new User { Id = 1, FullName = "Buse Karapınar", Email = "buse.karapinar@pentahub.com", Role = "ProjectManager", Department = "Yazılım", IsActive = true, CreatedAt = now },

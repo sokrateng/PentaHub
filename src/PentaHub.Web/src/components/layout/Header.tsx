@@ -1,4 +1,4 @@
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Bell, Search, ChevronRight } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import {
@@ -9,6 +9,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { useAuthStore } from '@/stores/authStore';
 
 const routeTitles: Record<string, string> = {
   '/dashboard': 'Dashboard',
@@ -17,18 +18,41 @@ const routeTitles: Record<string, string> = {
   '/sprints': 'Sprintler',
   '/backlog': 'Backlog',
   '/resources': 'Kaynaklar',
+  '/contacts': 'Kontaklar',
 };
 
 function getBreadcrumb(pathname: string): { parent?: string; current: string } {
   if (pathname.startsWith('/projects/') && pathname !== '/projects') {
     return { parent: 'Projeler', current: 'Proje Detayı' };
   }
+  if (pathname.startsWith('/contacts/') && pathname !== '/contacts') {
+    return { parent: 'Kontaklar', current: 'Kontak Detayı' };
+  }
   return { current: routeTitles[pathname] ?? 'PentaHub' };
+}
+
+function getInitials(name: string): string {
+  return name
+    .split(' ')
+    .map((p) => p[0])
+    .join('')
+    .toUpperCase()
+    .slice(0, 2);
 }
 
 export function Header() {
   const location = useLocation();
+  const navigate = useNavigate();
   const breadcrumb = getBreadcrumb(location.pathname);
+  const { user, logout } = useAuthStore();
+
+  const displayName = user?.fullName ?? 'Kullanıcı';
+  const initials = getInitials(displayName);
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login', { replace: true });
+  };
 
   return (
     <header className="h-14 bg-white border-b border-border flex items-center px-6 gap-4 sticky top-0 z-40">
@@ -71,17 +95,30 @@ export function Header() {
               className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
               style={{ backgroundColor: 'hsl(153 60% 33%)' }}
               aria-label="Kullanıcı menüsü"
+              title={displayName}
             >
-              U
+              {initials}
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-48">
-            <DropdownMenuLabel>Hesabım</DropdownMenuLabel>
+            <DropdownMenuLabel>
+              <div>
+                <p className="font-medium text-sm">{displayName}</p>
+                {user?.email && (
+                  <p className="text-xs text-muted-foreground font-normal truncate">{user.email}</p>
+                )}
+              </div>
+            </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem>Profil</DropdownMenuItem>
             <DropdownMenuItem>Ayarlar</DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="text-destructive">Çıkış Yap</DropdownMenuItem>
+            <DropdownMenuItem
+              className="text-destructive focus:text-destructive"
+              onClick={handleLogout}
+            >
+              Çıkış Yap
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>

@@ -1,6 +1,8 @@
+import { useEffect } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AppShell } from '@/components/layout/AppShell';
+import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { DashboardPage } from '@/pages/DashboardPage';
 import { ProjectsPage } from '@/pages/ProjectsPage';
 import { ProjectDetailPage } from '@/pages/ProjectDetailPage';
@@ -11,7 +13,12 @@ import { SprintDetailPage } from '@/pages/SprintDetailPage';
 import { BacklogPage } from '@/pages/BacklogPage';
 import { GanttPage } from '@/pages/GanttPage';
 import { ResourcesPage } from '@/pages/ResourcesPage';
+import { ContactsPage } from '@/pages/ContactsPage';
+import { ContactDetailPage } from '@/pages/ContactDetailPage';
+import { LoginPage } from '@/pages/LoginPage';
+import { RegisterPage } from '@/pages/RegisterPage';
 import { PlaceholderPage } from '@/pages/PlaceholderPage';
+import { useAuthStore } from '@/stores/authStore';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -22,27 +29,48 @@ const queryClient = new QueryClient({
   },
 });
 
+function AppWithAuth() {
+  const loadFromStorage = useAuthStore((s) => s.loadFromStorage);
+
+  useEffect(() => {
+    loadFromStorage();
+  }, [loadFromStorage]);
+
+  return (
+    <Routes>
+      {/* Public routes */}
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/register" element={<RegisterPage />} />
+
+      {/* Protected routes */}
+      <Route element={<ProtectedRoute />}>
+        <Route element={<AppShell />}>
+          <Route path="/" element={<DashboardPage />} />
+          <Route path="/dashboard" element={<Navigate to="/" replace />} />
+          <Route path="/projects" element={<ProjectsPage />} />
+          <Route path="/projects/:id" element={<ProjectDetailPage />} />
+          <Route path="/projects/:projectId/tasks" element={<TasksPage />} />
+          <Route path="/projects/:projectId/gantt" element={<GanttPage />} />
+          <Route path="/tasks" element={<PlaceholderPage />} />
+          <Route path="/tasks/:id" element={<TaskDetailPage />} />
+          <Route path="/sprints" element={<SprintsPage />} />
+          <Route path="/sprints/:id" element={<SprintDetailPage />} />
+          <Route path="/backlog" element={<BacklogPage />} />
+          <Route path="/resources" element={<ResourcesPage />} />
+          <Route path="/contacts" element={<ContactsPage />} />
+          <Route path="/contacts/:id" element={<ContactDetailPage />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Route>
+      </Route>
+    </Routes>
+  );
+}
+
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
-        <Routes>
-          <Route element={<AppShell />}>
-            <Route path="/" element={<DashboardPage />} />
-            <Route path="/dashboard" element={<Navigate to="/" replace />} />
-            <Route path="/projects" element={<ProjectsPage />} />
-            <Route path="/projects/:id" element={<ProjectDetailPage />} />
-            <Route path="/projects/:projectId/tasks" element={<TasksPage />} />
-            <Route path="/projects/:projectId/gantt" element={<GanttPage />} />
-            <Route path="/tasks" element={<PlaceholderPage />} />
-            <Route path="/tasks/:id" element={<TaskDetailPage />} />
-            <Route path="/sprints" element={<SprintsPage />} />
-            <Route path="/sprints/:id" element={<SprintDetailPage />} />
-            <Route path="/backlog" element={<BacklogPage />} />
-            <Route path="/resources" element={<ResourcesPage />} />
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Route>
-        </Routes>
+        <AppWithAuth />
       </BrowserRouter>
     </QueryClientProvider>
   );

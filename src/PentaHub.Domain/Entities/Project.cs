@@ -23,6 +23,7 @@ public class Project : BaseEntity
 
     // Navigation
     public User ProjectManager { get; set; } = null!;
+    public Contact? Contact { get; set; }
     public ICollection<TaskStage> TaskStages { get; set; } = new List<TaskStage>();
     public ICollection<ProjectTask> Tasks { get; set; } = new List<ProjectTask>();
     public ICollection<Sprint> Sprints { get; set; } = new List<Sprint>();
