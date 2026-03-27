@@ -1,0 +1,624 @@
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import {
+  DragDropContext,
+  Droppable,
+  Draggable,
+  type DropResult,
+} from '@hello-pangea/dnd';
+import {
+  LayoutGrid,
+  List,
+  Filter,
+  Plus,
+  Star,
+  Banknote,
+  Calendar,
+  User as UserIcon,
+  Building2,
+} from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { projectsApi, usersApi } from '@/services/api';
+import { ProjectStatus, PrivacyLevel, EvaluationType } from '@/types';
+import type { ProjectListItem, CreateProjectRequest } from '@/types';
+
+type ViewMode = 'kanban' | 'list';
+
+interface Column {
+  id: ProjectStatus;
+  label: string;
+  color: string;
+}
+
+const columns: Column[] = [
+  { id: ProjectStatus.Beklemede, label: 'Beklemede', color: '#f59e0b' },
+  { id: ProjectStatus.DevamEden, label: 'Devam Eden', color: 'hsl(153 60% 33%)' },
+  { id: ProjectStatus.Tamamlandi, label: 'Tamamlandı', color: '#3b82f6' },
+];
+
+function formatDate(dateStr?: string): string {
+  if (!dateStr) return '—';
+  return new Date(dateStr).toLocaleDateString('tr-TR', { day: '2-digit', month: 'short', year: 'numeric' });
+}
+
+function getInitials(name?: string): string {
+  if (!name) return '?';
+  return name
+    .split(' ')
+    .map((part) => part[0])
+    .join('')
+    .slice(0, 2)
+    .toUpperCase();
+}
+
+interface ProjectCardProps {
+  project: ProjectListItem;
+  index: number;
+  onClick: () => void;
+}
+
+function ProjectCard({ project, index, onClick }: ProjectCardProps) {
+  return (
+    <Draggable draggableId={String(project.id)} index={index}>
+      {(provided, snapshot) => (
+        <div
+          ref={provided.innerRef}
+          {...provided.draggableProps}
+          {...provided.dragHandleProps}
+          onClick={onClick}
+          className={[
+            'bg-white rounded-lg border border-border p-3.5 cursor-pointer',
+            'hover:shadow-md hover:border-border/80 transition-all duration-150',
+            snapshot.isDragging ? 'shadow-lg rotate-1 opacity-90' : '',
+          ].join(' ')}
+        >
+          {/* Header row */}
+          <div className="flex items-start justify-between gap-2 mb-2.5">
+            <h4 className="text-sm font-semibold text-foreground leading-tight line-clamp-2 flex-1">
+              {project.name}
+            </h4>
+            {project.isTemplate && (
+              <Star className="w-3.5 h-3.5 text-amber-400 flex-shrink-0 mt-0.5" fill="currentColor" />
+            )}
+          </div>
+
+          {/* Department */}
+          {project.departmentName && (
+            <div className="flex items-center gap-1.5 mb-2 text-xs text-muted-foreground">
+              <Building2 className="w-3 h-3" />
+              <span className="truncate">{project.departmentName}</span>
+            </div>
+          )}
+
+          {/* Manager */}
+          {project.projectManagerName && (
+            <div className="flex items-center gap-1.5 mb-2">
+              <div
+                className="w-5 h-5 rounded-full flex items-center justify-center text-white text-[10px] font-semibold flex-shrink-0"
+                style={{ backgroundColor: 'hsl(153 60% 33%)' }}
+              >
+                {getInitials(project.projectManagerName)}
+              </div>
+              <span className="text-xs text-muted-foreground truncate">{project.projectManagerName}</span>
+            </div>
+          )}
+
+          {/* Dates */}
+          {(project.startDate || project.endDate) && (
+            <div className="flex items-center gap-1.5 mb-2.5 text-xs text-muted-foreground">
+              <Calendar className="w-3 h-3 flex-shrink-0" />
+              <span>
+                {formatDate(project.startDate)} – {formatDate(project.endDate)}
+              </span>
+            </div>
+          )}
+
+          {/* Footer badges */}
+          <div className="flex items-center gap-1.5 flex-wrap">
+            {project.isBillable && (
+              <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4 gap-0.5 font-medium">
+                <Banknote className="w-2.5 h-2.5" />
+                Faturalanabilir
+              </Badge>
+            )}
+            {project.taskCount > 0 && (
+              <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4 font-medium">
+                {project.taskCount} görev
+              </Badge>
+            )}
+          </div>
+        </div>
+      )}
+    </Draggable>
+  );
+}
+
+function KanbanSkeleton() {
+  return (
+    <div className="flex gap-5 overflow-x-auto pb-4">
+      {columns.map((col) => (
+        <div key={col.id} className="flex-shrink-0 w-72">
+          <div className="h-8 bg-muted rounded mb-3 animate-pulse" />
+          <div className="space-y-2.5">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="h-28 bg-muted rounded-lg animate-pulse" />
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+interface NewProjectForm {
+  name: string;
+  description: string;
+  projectManagerId: string;
+  departmentName: string;
+  status: string;
+  startDate: string;
+  endDate: string;
+  isBillable: boolean;
+  isTemplate: boolean;
+}
+
+const defaultForm: NewProjectForm = {
+  name: '',
+  description: '',
+  projectManagerId: '',
+  departmentName: '',
+  status: String(ProjectStatus.Beklemede),
+  startDate: '',
+  endDate: '',
+  isBillable: false,
+  isTemplate: false,
+};
+
+function statusBadgeVariant(status: ProjectStatus): 'default' | 'secondary' | 'outline' {
+  if (status === ProjectStatus.DevamEden) return 'default';
+  if (status === ProjectStatus.Tamamlandi) return 'secondary';
+  return 'outline';
+}
+
+function statusLabel(status: ProjectStatus): string {
+  if (status === ProjectStatus.DevamEden) return 'Devam Eden';
+  if (status === ProjectStatus.Tamamlandi) return 'Tamamlandı';
+  return 'Beklemede';
+}
+
+export function ProjectsPage() {
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const [viewMode, setViewMode] = useState<ViewMode>('kanban');
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [form, setForm] = useState<NewProjectForm>(defaultForm);
+
+  const { data: projectsResponse, isLoading } = useQuery({
+    queryKey: ['projects'],
+    queryFn: () => projectsApi.getAll({ excludeTemplates: false }),
+  });
+
+  const { data: usersResponse } = useQuery({
+    queryKey: ['users'],
+    queryFn: () => usersApi.getAll(),
+  });
+
+  const createMutation = useMutation({
+    mutationFn: (payload: CreateProjectRequest) => projectsApi.create(payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['projects'] });
+      setDialogOpen(false);
+      setForm(defaultForm);
+    },
+  });
+
+  const updateStatusMutation = useMutation({
+    mutationFn: ({ id, status }: { id: number; status: number }) =>
+      projectsApi.updateStatus(id, status),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['projects'] });
+    },
+  });
+
+  const projects = projectsResponse?.data ?? [];
+  const users = usersResponse?.data ?? [];
+
+  const projectsByStatus = (status: ProjectStatus): ProjectListItem[] =>
+    projects.filter((p) => p.status === status);
+
+  const handleDragEnd = (result: DropResult) => {
+    if (!result.destination) return;
+    const newStatus = Number(result.destination.droppableId) as ProjectStatus;
+    const projectId = Number(result.draggableId);
+    const project = projects.find((p) => p.id === projectId);
+    if (!project || project.status === newStatus) return;
+    updateStatusMutation.mutate({ id: projectId, status: newStatus });
+  };
+
+  const handleCreate = () => {
+    if (!form.name.trim()) return;
+    const payload: CreateProjectRequest = {
+      name: form.name.trim(),
+      description: form.description || undefined,
+      status: Number(form.status) as ProjectStatus,
+      projectManagerId: form.projectManagerId ? Number(form.projectManagerId) : 1,
+      departmentName: form.departmentName || undefined,
+      privacyLevel: PrivacyLevel.AllEmployees,
+      isBillable: form.isBillable,
+      isTemplate: form.isTemplate,
+      startDate: form.startDate || undefined,
+      endDate: form.endDate || undefined,
+      customerEvaluation: EvaluationType.None,
+    };
+    createMutation.mutate(payload);
+  };
+
+  return (
+    <div className="flex flex-col h-full gap-5">
+      {/* Top bar */}
+      <div className="flex items-center justify-between flex-wrap gap-3">
+        <h1 className="text-xl font-bold text-foreground">Projeler</h1>
+        <div className="flex items-center gap-2">
+          {/* View toggle */}
+          <div className="flex items-center border border-border rounded-md overflow-hidden h-8">
+            <button
+              onClick={() => setViewMode('kanban')}
+              className={[
+                'px-2.5 h-full flex items-center gap-1.5 text-xs font-medium transition-colors',
+                viewMode === 'kanban'
+                  ? 'bg-primary text-primary-foreground'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-muted',
+              ].join(' ')}
+              aria-label="Kanban görünümü"
+            >
+              <LayoutGrid className="w-3.5 h-3.5" />
+              Kanban
+            </button>
+            <button
+              onClick={() => setViewMode('list')}
+              className={[
+                'px-2.5 h-full flex items-center gap-1.5 text-xs font-medium transition-colors border-l border-border',
+                viewMode === 'list'
+                  ? 'bg-primary text-primary-foreground'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-muted',
+              ].join(' ')}
+              aria-label="Liste görünümü"
+            >
+              <List className="w-3.5 h-3.5" />
+              Liste
+            </button>
+          </div>
+
+          <Button variant="outline" size="sm" className="h-8 gap-1.5 text-xs">
+            <Filter className="w-3.5 h-3.5" />
+            Filtrele
+          </Button>
+
+          <Button
+            size="sm"
+            className="h-8 gap-1.5 text-xs"
+            style={{ backgroundColor: 'hsl(153 60% 33%)', color: 'white' }}
+            onClick={() => setDialogOpen(true)}
+          >
+            <Plus className="w-3.5 h-3.5" />
+            Yeni Proje
+          </Button>
+        </div>
+      </div>
+
+      {/* Content */}
+      {isLoading ? (
+        <KanbanSkeleton />
+      ) : viewMode === 'kanban' ? (
+        <DragDropContext onDragEnd={handleDragEnd}>
+          <div className="flex gap-5 overflow-x-auto pb-4 flex-1">
+            {columns.map((col) => {
+              const colProjects = projectsByStatus(col.id);
+              return (
+                <div key={col.id} className="flex-shrink-0 w-72">
+                  {/* Column header */}
+                  <div className="flex items-center gap-2 mb-3 px-1">
+                    <span
+                      className="w-2.5 h-2.5 rounded-sm flex-shrink-0"
+                      style={{ backgroundColor: col.color }}
+                    />
+                    <span className="text-sm font-semibold text-foreground flex-1">{col.label}</span>
+                    <span className="text-xs font-medium text-muted-foreground bg-muted rounded-full px-2 py-0.5">
+                      {colProjects.length}
+                    </span>
+                  </div>
+
+                  {/* Column body with top border */}
+                  <div
+                    className="rounded-xl pt-0.5 min-h-[200px]"
+                    style={{ backgroundColor: 'transparent' }}
+                  >
+                    <div
+                      className="rounded-t-xl h-0.5 mb-2"
+                      style={{ backgroundColor: col.color }}
+                    />
+                    <Droppable droppableId={String(col.id)}>
+                      {(provided, snapshot) => (
+                        <div
+                          ref={provided.innerRef}
+                          {...provided.droppableProps}
+                          className={[
+                            'space-y-2.5 min-h-[100px] rounded-lg p-1 transition-colors',
+                            snapshot.isDraggingOver ? 'bg-muted/60' : '',
+                          ].join(' ')}
+                        >
+                          {colProjects.map((project, index) => (
+                            <ProjectCard
+                              key={project.id}
+                              project={project}
+                              index={index}
+                              onClick={() => navigate(`/projects/${project.id}`)}
+                            />
+                          ))}
+                          {provided.placeholder}
+                          {colProjects.length === 0 && !snapshot.isDraggingOver && (
+                            <div className="text-xs text-muted-foreground text-center py-8 opacity-60">
+                              Proje yok
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </Droppable>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </DragDropContext>
+      ) : (
+        /* List View */
+        <div className="bg-white rounded-xl border border-border overflow-hidden">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-[300px]">Proje Adı</TableHead>
+                <TableHead>Yönetici</TableHead>
+                <TableHead>Durum</TableHead>
+                <TableHead>Departman</TableHead>
+                <TableHead>Başlangıç</TableHead>
+                <TableHead>Bitiş</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {projects.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={6} className="text-center text-muted-foreground py-12 text-sm">
+                    Henüz proje bulunmuyor
+                  </TableCell>
+                </TableRow>
+              ) : (
+                projects.map((project) => (
+                  <TableRow
+                    key={project.id}
+                    className="cursor-pointer hover:bg-muted/40"
+                    onClick={() => navigate(`/projects/${project.id}`)}
+                  >
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium text-sm">{project.name}</span>
+                        {project.isTemplate && (
+                          <Star className="w-3 h-3 text-amber-400" fill="currentColor" />
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      {project.projectManagerName ? (
+                        <div className="flex items-center gap-1.5">
+                          <div
+                            className="w-5 h-5 rounded-full flex items-center justify-center text-white text-[10px] font-semibold"
+                            style={{ backgroundColor: 'hsl(153 60% 33%)' }}
+                          >
+                            {getInitials(project.projectManagerName)}
+                          </div>
+                          <span className="text-sm">{project.projectManagerName}</span>
+                        </div>
+                      ) : (
+                        <span className="text-muted-foreground text-sm">—</span>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <Badge
+                        variant={statusBadgeVariant(project.status)}
+                        className="text-xs"
+                        style={
+                          project.status === ProjectStatus.DevamEden
+                            ? { backgroundColor: 'hsl(153 60% 33%)', color: 'white' }
+                            : {}
+                        }
+                      >
+                        {statusLabel(project.status)}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-sm text-muted-foreground">
+                      {project.departmentName ?? '—'}
+                    </TableCell>
+                    <TableCell className="text-sm text-muted-foreground">
+                      {formatDate(project.startDate)}
+                    </TableCell>
+                    <TableCell className="text-sm text-muted-foreground">
+                      {formatDate(project.endDate)}
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </div>
+      )}
+
+      {/* New Project Dialog */}
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Yeni Proje Oluştur</DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4 py-2">
+            {/* Name */}
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium text-foreground">
+                Proje Adı <span className="text-destructive">*</span>
+              </label>
+              <Input
+                placeholder="Proje adı giriniz..."
+                value={form.name}
+                onChange={(e) => setForm((prev) => ({ ...prev, name: e.target.value }))}
+              />
+            </div>
+
+            {/* Description */}
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium text-foreground">Açıklama</label>
+              <textarea
+                placeholder="Proje açıklaması..."
+                value={form.description}
+                onChange={(e) => setForm((prev) => ({ ...prev, description: e.target.value }))}
+                className="w-full min-h-[80px] rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring resize-none"
+              />
+            </div>
+
+            {/* Manager */}
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium text-foreground">Proje Yöneticisi</label>
+              <Select
+                value={form.projectManagerId}
+                onValueChange={(value) => setForm((prev) => ({ ...prev, projectManagerId: value }))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Yönetici seçin...">
+                    {form.projectManagerId
+                      ? users.find((u) => String(u.id) === form.projectManagerId)?.fullName
+                      : undefined}
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  {users.map((user) => (
+                    <SelectItem key={user.id} value={String(user.id)}>
+                      <div className="flex items-center gap-2">
+                        <UserIcon className="w-3.5 h-3.5 text-muted-foreground" />
+                        {user.fullName}
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Department */}
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium text-foreground">Departman</label>
+              <Input
+                placeholder="Departman adı..."
+                value={form.departmentName}
+                onChange={(e) => setForm((prev) => ({ ...prev, departmentName: e.target.value }))}
+              />
+            </div>
+
+            {/* Status */}
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium text-foreground">Durum</label>
+              <Select
+                value={form.status}
+                onValueChange={(value) => setForm((prev) => ({ ...prev, status: value }))}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={String(ProjectStatus.Beklemede)}>Beklemede</SelectItem>
+                  <SelectItem value={String(ProjectStatus.DevamEden)}>Devam Eden</SelectItem>
+                  <SelectItem value={String(ProjectStatus.Tamamlandi)}>Tamamlandı</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Dates */}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium text-foreground">Başlangıç Tarihi</label>
+                <Input
+                  type="date"
+                  value={form.startDate}
+                  onChange={(e) => setForm((prev) => ({ ...prev, startDate: e.target.value }))}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium text-foreground">Bitiş Tarihi</label>
+                <Input
+                  type="date"
+                  value={form.endDate}
+                  onChange={(e) => setForm((prev) => ({ ...prev, endDate: e.target.value }))}
+                />
+              </div>
+            </div>
+
+            {/* Checkboxes */}
+            <div className="flex items-center gap-6">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={form.isBillable}
+                  onChange={(e) => setForm((prev) => ({ ...prev, isBillable: e.target.checked }))}
+                  className="w-4 h-4 rounded border-border accent-primary"
+                />
+                <span className="text-sm font-medium">Faturalanabilir</span>
+              </label>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={form.isTemplate}
+                  onChange={(e) => setForm((prev) => ({ ...prev, isTemplate: e.target.checked }))}
+                  className="w-4 h-4 rounded border-border accent-primary"
+                />
+                <span className="text-sm font-medium">Şablon</span>
+              </label>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDialogOpen(false)}>
+              İptal
+            </Button>
+            <Button
+              onClick={handleCreate}
+              disabled={!form.name.trim() || createMutation.isPending}
+              style={{ backgroundColor: 'hsl(153 60% 33%)', color: 'white' }}
+            >
+              {createMutation.isPending ? 'Oluşturuluyor...' : 'Oluştur'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
