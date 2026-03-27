@@ -132,11 +132,18 @@ try
     // SignalR Hub
     app.MapHub<CollaborationHub>("/hubs/collaboration");
 
-    // Auto-migrate and seed
+    // Auto-migrate and seed (skip for InMemory database used in integration tests)
     using (var scope = app.Services.CreateScope())
     {
-        var db = scope.ServiceProvider.GetRequiredService<PentaHubDbContext>();
-        db.Database.Migrate();
+        var dbOptions = scope.ServiceProvider.GetRequiredService<DbContextOptions<PentaHubDbContext>>();
+        var isInMemory = dbOptions.Extensions.Any(e =>
+            e.GetType().Name.Contains("InMemory", StringComparison.OrdinalIgnoreCase));
+
+        if (!isInMemory)
+        {
+            var db = scope.ServiceProvider.GetRequiredService<PentaHubDbContext>();
+            db.Database.Migrate();
+        }
     }
 
     app.Run();
@@ -149,3 +156,6 @@ finally
 {
     Log.CloseAndFlush();
 }
+
+// Required for WebApplicationFactory in integration tests
+public partial class Program { }
