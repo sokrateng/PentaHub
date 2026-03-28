@@ -45,12 +45,15 @@ public class PentaHubDbContext : DbContext, IApplicationDbContext
             new Contact { Id = 5, CompanyName = "MegaRetail A.Ş.", ContactPersonName = "Mehmet Demir", Email = "mehmet.demir@megaretail.com.tr", Phone = "+90 224 555 0505", Mobile = "+90 542 555 0505", City = "Bursa", Country = "Türkiye", Website = "https://www.megaretail.com.tr", Tags = "perakende,e-ticaret", CreatedAt = now }
         );
 
+        // BCrypt hash for "demo123"
+        var demoPasswordHash = "$2b$10$xk.p2GDylG0KP3WpW7CF7.cgjHfkbU1tgy4QvJtUd/xjxYhQHTU02";
+
         modelBuilder.Entity<User>().HasData(
-            new User { Id = 1, FullName = "Buse Karapınar", Email = "buse.karapinar@pentahub.com", Role = "ProjectManager", Department = "Yazılım", IsActive = true, CreatedAt = now },
-            new User { Id = 2, FullName = "Can Atem", Email = "can.atem@pentahub.com", Role = "ProjectManager", Department = "Satış", IsActive = true, CreatedAt = now },
-            new User { Id = 3, FullName = "Osman Kaya", Email = "osman.kaya@pentahub.com", Role = "User", Department = "Yazılım", IsActive = true, CreatedAt = now },
-            new User { Id = 4, FullName = "Ali Akın", Email = "ali.akin@pentahub.com", Role = "Admin", Department = "IT", IsActive = true, CreatedAt = now },
-            new User { Id = 5, FullName = "Gizem Çiğer", Email = "gizem.ciger@pentahub.com", Role = "ProjectManager", Department = "Pazarlama", IsActive = true, CreatedAt = now }
+            new User { Id = 1, FullName = "Buse Karapınar", Email = "buse.karapinar@pentahub.com", PasswordHash = demoPasswordHash, Role = "ProjectManager", Department = "Yazılım", IsActive = true, CreatedAt = now },
+            new User { Id = 2, FullName = "Can Atem", Email = "can.atem@pentahub.com", PasswordHash = demoPasswordHash, Role = "ProjectManager", Department = "Satış", IsActive = true, CreatedAt = now },
+            new User { Id = 3, FullName = "Osman Kaya", Email = "osman.kaya@pentahub.com", PasswordHash = demoPasswordHash, Role = "User", Department = "Yazılım", IsActive = true, CreatedAt = now },
+            new User { Id = 4, FullName = "Ali Akın", Email = "ali.akin@pentahub.com", PasswordHash = demoPasswordHash, Role = "Admin", Department = "IT", IsActive = true, CreatedAt = now },
+            new User { Id = 5, FullName = "Gizem Çiğer", Email = "gizem.ciger@pentahub.com", PasswordHash = demoPasswordHash, Role = "ProjectManager", Department = "Pazarlama", IsActive = true, CreatedAt = now }
         );
 
         modelBuilder.Entity<Project>().HasData(
