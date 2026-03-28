@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueries } from '@tanstack/react-query';
 import { Clock, AlertCircle, DollarSign, BarChart2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -105,14 +105,34 @@ export function UserTimeSheetsPage() {
     queryFn: () => usersApi.getAll(),
   });
 
-  const { data: timeSheetsResponse, isLoading } = useQuery({
+  const isAllUsers = selectedUserId === 'all';
+
+  const { data: timeSheetsResponse, isLoading: isSingleLoading } = useQuery({
     queryKey: ['user-timesheets', selectedUserId, startDate, endDate],
     queryFn: () => timeSheetsApi.getByUser(Number(selectedUserId), startDate, endDate),
-    enabled: !!selectedUserId,
+    enabled: !!selectedUserId && !isAllUsers,
   });
 
   const users = usersResponse?.data ?? [];
-  const timesheets = timeSheetsResponse?.data ?? [];
+
+  const allUserQueries = useQueries({
+    queries: isAllUsers
+      ? users.map((u) => ({
+          queryKey: ['user-timesheets', String(u.id), startDate, endDate],
+          queryFn: () => timeSheetsApi.getByUser(u.id, startDate, endDate),
+        }))
+      : [],
+  });
+
+  const isAllLoading = isAllUsers && allUserQueries.some((q) => q.isLoading);
+  const isLoading = isAllUsers ? isAllLoading : isSingleLoading;
+
+  const timesheets: TimeSheet[] = useMemo(() => {
+    if (isAllUsers) {
+      return allUserQueries.flatMap((q) => q.data?.data ?? []);
+    }
+    return timeSheetsResponse?.data ?? [];
+  }, [isAllUsers, allUserQueries, timeSheetsResponse]);
 
   const totalHours = useMemo(
     () => timesheets.reduce((s, t) => s + t.hours, 0),
@@ -166,12 +186,15 @@ export function UserTimeSheetsPage() {
             <Select value={selectedUserId} onValueChange={setSelectedUserId}>
               <SelectTrigger>
                 <SelectValue placeholder="Kullanıcı seçin...">
-                  {selectedUserId
+                  {selectedUserId === 'all'
+                    ? 'Tüm Kullanıcılar'
+                    : selectedUserId
                     ? users.find((u) => String(u.id) === selectedUserId)?.fullName ?? 'Kullanıcı seçin...'
                     : undefined}
                 </SelectValue>
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="all">Tüm Kullanıcılar</SelectItem>
                 {users.map((u) => (
                   <SelectItem key={u.id} value={String(u.id)}>
                     {u.fullName}
@@ -265,7 +288,7 @@ export function UserTimeSheetsPage() {
       </div>
 
       {/* Summary cards */}
-      {selectedUserId && (
+      {(selectedUserId) && (
         <div className="grid grid-cols-2 gap-4">
           <div className="bg-white rounded-xl border border-border p-4 flex items-center gap-3">
             <div
@@ -341,6 +364,11 @@ export function UserTimeSheetsPage() {
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="border-b border-border bg-muted/20">
+                        {isAllUsers && (
+                          <th className="text-left px-4 py-2.5 font-semibold text-xs text-muted-foreground uppercase tracking-wide">
+                            Kullanıcı
+                          </th>
+                        )}
                         {groupBy === 'task' && (
                           <th className="text-left px-4 py-2.5 font-semibold text-xs text-muted-foreground uppercase tracking-wide">
                             Tarih
@@ -371,6 +399,11 @@ export function UserTimeSheetsPage() {
                             idx % 2 === 0 ? '' : 'bg-muted/10',
                           ].join(' ')}
                         >
+                          {isAllUsers && (
+                            <td className="px-4 py-3 text-sm text-foreground whitespace-nowrap">
+                              {ts.userName}
+                            </td>
+                          )}
                           {groupBy === 'task' && (
                             <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">
                               {formatDate(ts.date)}
@@ -423,7 +456,7 @@ export function UserTimeSheetsPage() {
       )}
 
       {/* Prompt when no user selected */}
-      {!selectedUserId && (
+      {!selectedUserId && selectedUserId !== 'all' && (
         <div className="bg-white rounded-xl border border-border p-16 flex flex-col items-center justify-center text-center">
           <div
             className="w-14 h-14 rounded-xl flex items-center justify-center mb-4"

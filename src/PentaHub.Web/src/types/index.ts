@@ -245,7 +245,6 @@ export interface CreateResourceAllocationRequest {
   startDate: string;
   endDate: string;
   hoursPerDay: number;
-  totalHours: number;
   notes?: string;
 }
 

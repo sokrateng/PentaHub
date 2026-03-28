@@ -273,8 +273,12 @@ export function BacklogPage() {
       tasksApi.create(Number(selectedProjectId), payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['backlog'] });
+      queryClient.invalidateQueries({ queryKey: ['tasks'] });
       setTaskDialogOpen(false);
       setTaskForm(defaultTaskForm);
+    },
+    onError: (error) => {
+      console.error('Görev oluşturma hatası:', error);
     },
   });
 
@@ -494,7 +498,7 @@ export function BacklogPage() {
       )}
 
       {/* New Task Dialog */}
-      <Dialog open={taskDialogOpen} onOpenChange={setTaskDialogOpen}>
+      <Dialog open={taskDialogOpen} onOpenChange={(open) => { if (!open && !createTaskMutation.isPending) { setTaskDialogOpen(false); setTaskForm(defaultTaskForm); } else if (open) { setTaskDialogOpen(true); } }}>
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>Yeni Görev Oluştur</DialogTitle>

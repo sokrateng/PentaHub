@@ -21,6 +21,9 @@ import {
   Minus,
   ClipboardList,
   Info,
+  Plus,
+  Trash2,
+  StickyNote,
 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -41,8 +44,8 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { projectsApi, usersApi, taskStagesApi } from '@/services/api';
-import { ProjectStatus, PrivacyLevel, EvaluationType } from '@/types';
+import { projectsApi, usersApi, taskStagesApi, commentsApi } from '@/services/api';
+import { ProjectStatus, PrivacyLevel, EvaluationType, CommentType } from '@/types';
 import type { CreateProjectRequest } from '@/types';
 import { MilestonesTab } from '@/components/projects/MilestonesTab';
 import { CollaborationPanel } from '@/components/collaboration/CollaborationPanel';
@@ -55,6 +58,7 @@ const tabItems = [
   'Görev Aşamaları',
   'Hand-over',
   'AI Analysis',
+  'Belgeler',
 ];
 
 const statusStages = [
@@ -149,6 +153,10 @@ export function ProjectDetailPage() {
     new Array(handoverChecklistItems.length).fill(false)
   );
   const [handoverNotes, setHandoverNotes] = useState('');
+  const [newNoteContent, setNewNoteContent] = useState('');
+  const [newEmailContent, setNewEmailContent] = useState('');
+  const [addingNote, setAddingNote] = useState(false);
+  const [addingEmail, setAddingEmail] = useState(false);
 
   const updateMutation = useMutation({
     mutationFn: (payload: CreateProjectRequest) => projectsApi.update(projectId, payload),
@@ -163,6 +171,43 @@ export function ProjectDetailPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['project', projectId] });
       queryClient.invalidateQueries({ queryKey: ['projects'] });
+    },
+  });
+
+  const { data: commentsResponse, isLoading: commentsLoading } = useQuery({
+    queryKey: ['project-comments', projectId],
+    queryFn: () => commentsApi.getByEntity('projects', projectId),
+    enabled: !!projectId,
+  });
+
+  const projectComments = (commentsResponse?.data ?? []).filter(
+    (c) => c.commentType === CommentType.Note || c.commentType === CommentType.Email
+  );
+
+  const addCommentMutation = useMutation({
+    mutationFn: (payload: { content: string; commentType: CommentType }) =>
+      commentsApi.add({
+        entityType: 'Project',
+        entityId: projectId,
+        content: payload.content,
+        commentType: payload.commentType,
+        isInternal: true,
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['project-comments', projectId] });
+      queryClient.invalidateQueries({ queryKey: ['project-metrics', projectId] });
+      setNewNoteContent('');
+      setNewEmailContent('');
+      setAddingNote(false);
+      setAddingEmail(false);
+    },
+  });
+
+  const deleteCommentMutation = useMutation({
+    mutationFn: (id: number) => commentsApi.delete(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['project-comments', projectId] });
+      queryClient.invalidateQueries({ queryKey: ['project-metrics', projectId] });
     },
   });
 
@@ -405,7 +450,11 @@ export function ProjectDetailPage() {
         {/* Metrics row */}
         <div className="grid grid-cols-7 gap-2">
           {/* Belgeler */}
-          <div className="bg-white rounded-lg border border-border p-3 flex flex-col items-center gap-1 text-center">
+          <div
+            className="bg-white rounded-lg border border-border p-3 flex flex-col items-center gap-1 text-center cursor-pointer hover:border-[hsl(213_94%_48%)] hover:bg-[hsl(213_94%_48%)]/5 hover:shadow-sm transition-all"
+            onClick={() => setActiveTab('Belgeler')}
+            title="Belgelere git"
+          >
             <FileText className="w-4 h-4" style={{ color: 'hsl(213 94% 48%)' }} />
             <span className="text-lg font-bold text-foreground leading-none">{metrics?.documentCount ?? 0}</span>
             <span className="text-[10px] font-semibold" style={{ color: 'hsl(213 94% 48%)' }}>Belgeler</span>
@@ -1108,6 +1157,163 @@ export function ProjectDetailPage() {
                     <p className="text-xs text-muted-foreground">Süre Kullanımı</p>
                   </div>
                 </div>
+              </div>
+            </div>
+          </TabsContent>
+
+          {/* Belgeler tab */}
+          <TabsContent value="Belgeler" className="mt-5">
+            <div className="space-y-4">
+              {/* Actions */}
+              <div className="flex items-center gap-2 flex-wrap">
+                <Button
+                  size="sm"
+                  className="gap-1.5"
+                  style={{ backgroundColor: 'hsl(153 60% 33%)', color: 'white' }}
+                  onClick={() => { setAddingNote(true); setAddingEmail(false); }}
+                >
+                  <StickyNote className="w-4 h-4" />
+                  Not Ekle
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="gap-1.5"
+                  onClick={() => { setAddingEmail(true); setAddingNote(false); }}
+                >
+                  <Mail className="w-4 h-4" />
+                  E-posta Ekle
+                </Button>
+              </div>
+
+              {/* Add Note form */}
+              {addingNote && (
+                <div className="bg-white rounded-xl border border-border p-4 space-y-3">
+                  <div className="flex items-center gap-2">
+                    <StickyNote className="w-4 h-4" style={{ color: 'hsl(153 60% 33%)' }} />
+                    <h4 className="text-sm font-semibold">Yeni Not</h4>
+                  </div>
+                  <textarea
+                    value={newNoteContent}
+                    onChange={(e) => setNewNoteContent(e.target.value)}
+                    placeholder="Not içeriğini yazın..."
+                    className="w-full min-h-[100px] rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring resize-none"
+                    autoFocus
+                  />
+                  <div className="flex items-center gap-2 justify-end">
+                    <Button variant="outline" size="sm" onClick={() => { setAddingNote(false); setNewNoteContent(''); }}>
+                      İptal
+                    </Button>
+                    <Button
+                      size="sm"
+                      disabled={!newNoteContent.trim() || addCommentMutation.isPending}
+                      style={{ backgroundColor: 'hsl(153 60% 33%)', color: 'white' }}
+                      onClick={() => addCommentMutation.mutate({ content: newNoteContent.trim(), commentType: CommentType.Note })}
+                    >
+                      Kaydet
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              {/* Add Email form */}
+              {addingEmail && (
+                <div className="bg-white rounded-xl border border-border p-4 space-y-3">
+                  <div className="flex items-center gap-2">
+                    <Mail className="w-4 h-4" style={{ color: 'hsl(213 94% 48%)' }} />
+                    <h4 className="text-sm font-semibold">Yeni E-posta Notu</h4>
+                  </div>
+                  <textarea
+                    value={newEmailContent}
+                    onChange={(e) => setNewEmailContent(e.target.value)}
+                    placeholder="E-posta içeriğini yazın..."
+                    className="w-full min-h-[100px] rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring resize-none"
+                    autoFocus
+                  />
+                  <div className="flex items-center gap-2 justify-end">
+                    <Button variant="outline" size="sm" onClick={() => { setAddingEmail(false); setNewEmailContent(''); }}>
+                      İptal
+                    </Button>
+                    <Button
+                      size="sm"
+                      disabled={!newEmailContent.trim() || addCommentMutation.isPending}
+                      style={{ backgroundColor: 'hsl(213 94% 48%)', color: 'white' }}
+                      onClick={() => addCommentMutation.mutate({ content: newEmailContent.trim(), commentType: CommentType.Email })}
+                    >
+                      Kaydet
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              {/* Documents list */}
+              <div className="bg-white rounded-xl border border-border overflow-hidden">
+                {commentsLoading ? (
+                  <div className="p-6 space-y-3 animate-pulse">
+                    {[1, 2, 3].map((i) => <div key={i} className="h-16 bg-muted rounded" />)}
+                  </div>
+                ) : projectComments.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-16 text-center">
+                    <FileText className="w-10 h-10 opacity-20 mb-3" style={{ color: 'hsl(213 94% 48%)' }} />
+                    <p className="text-sm font-medium text-foreground mb-1">Belge bulunamadı</p>
+                    <p className="text-xs text-muted-foreground">
+                      Not veya e-posta ekleyerek belge oluşturabilirsiniz.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="divide-y divide-border">
+                    {projectComments.map((comment) => (
+                      <div key={comment.id} className="flex items-start gap-3 p-4 hover:bg-muted/20 transition-colors">
+                        <div
+                          className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+                          style={{
+                            backgroundColor: comment.commentType === CommentType.Note
+                              ? 'hsl(153 60% 33% / 0.12)'
+                              : 'hsl(213 94% 48% / 0.12)',
+                          }}
+                        >
+                          {comment.commentType === CommentType.Note ? (
+                            <StickyNote className="w-4 h-4" style={{ color: 'hsl(153 60% 33%)' }} />
+                          ) : (
+                            <Mail className="w-4 h-4" style={{ color: 'hsl(213 94% 48%)' }} />
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-0.5 flex-wrap">
+                            <Badge
+                              variant="outline"
+                              className="text-[10px] px-1.5 py-0 h-4"
+                              style={
+                                comment.commentType === CommentType.Note
+                                  ? { color: 'hsl(153 60% 33%)', borderColor: 'hsl(153 60% 33% / 0.4)' }
+                                  : { color: 'hsl(213 94% 48%)', borderColor: 'hsl(213 94% 48% / 0.4)' }
+                              }
+                            >
+                              {comment.commentType === CommentType.Note ? 'Not' : 'E-posta'}
+                            </Badge>
+                            <span className="text-xs font-medium text-foreground">{comment.authorName}</span>
+                            <span className="text-xs text-muted-foreground">
+                              {new Date(comment.createdAt).toLocaleDateString('tr-TR', {
+                                day: '2-digit', month: 'long', year: 'numeric',
+                              })}
+                            </span>
+                          </div>
+                          <p className="text-sm text-foreground/80 leading-relaxed whitespace-pre-wrap break-words">
+                            {comment.content}
+                          </p>
+                        </div>
+                        <button
+                          onClick={() => deleteCommentMutation.mutate(comment.id)}
+                          disabled={deleteCommentMutation.isPending}
+                          className="flex-shrink-0 p-1.5 rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+                          title="Sil"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           </TabsContent>

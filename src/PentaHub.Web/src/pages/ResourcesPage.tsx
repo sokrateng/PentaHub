@@ -118,7 +118,6 @@ function AddResourceDialog({ open, onClose, preselectedProjectId }: AddResourceD
       startDate: form.startDate,
       endDate: form.endDate,
       hoursPerDay: Number(form.hoursPerDay) || 8,
-      totalHours,
       notes: form.notes || undefined,
     });
   };

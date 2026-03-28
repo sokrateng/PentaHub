@@ -226,12 +226,16 @@ const defaultFilter: FilterState = {
   excludeTemplates: false,
 };
 
+type PageMode = 'projects' | 'templates';
+
 export function ProjectsPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [viewMode, setViewMode] = useState<ViewMode>('kanban');
+  const [pageMode, setPageMode] = useState<PageMode>('projects');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [form, setForm] = useState<NewProjectForm>(defaultForm);
+  const [selectedTemplateId, setSelectedTemplateId] = useState<string>('');
   const [filterOpen, setFilterOpen] = useState(false);
   const [pendingFilter, setPendingFilter] = useState<FilterState>(defaultFilter);
   const [appliedFilter, setAppliedFilter] = useState<FilterState>(defaultFilter);
@@ -290,10 +294,14 @@ export function ProjectsPage() {
   const allProjects = projectsResponse?.data ?? [];
   const users = usersResponse?.data ?? [];
 
-  const projects = allProjects.filter((p) => {
+  const templateProjects = allProjects.filter((p) => p.isTemplate);
+  const regularProjects = allProjects.filter((p) => {
+    if (p.isTemplate && pageMode === 'projects') return false;
     if (appliedFilter.isBillable !== null && p.isBillable !== appliedFilter.isBillable) return false;
     return true;
   });
+
+  const projects = pageMode === 'templates' ? templateProjects : regularProjects;
 
   const projectsByStatus = (status: ProjectStatus): ProjectListItem[] =>
     projects.filter((p) => p.status === status);
@@ -325,11 +333,59 @@ export function ProjectsPage() {
     createMutation.mutate(payload);
   };
 
+  const handleSelectTemplate = (templateId: string) => {
+    setSelectedTemplateId(templateId);
+    if (!templateId) {
+      setForm(defaultForm);
+      return;
+    }
+    const template = templateProjects.find((p) => String(p.id) === templateId);
+    if (template) {
+      setForm((prev) => ({
+        ...prev,
+        name: `Kopya - ${template.name}`,
+        departmentName: template.departmentName ?? '',
+        projectManagerId: template.projectManagerId ? String(template.projectManagerId) : '',
+        isBillable: template.isBillable,
+        isTemplate: false,
+      }));
+    }
+  };
+
   return (
     <div className="flex flex-col h-full gap-5">
       {/* Top bar */}
       <div className="flex items-center justify-between flex-wrap gap-3">
-        <h1 className="text-xl font-bold text-foreground">Projeler</h1>
+        <div className="flex items-center gap-3">
+          <h1 className="text-xl font-bold text-foreground">
+            {pageMode === 'templates' ? 'Şablonlar' : 'Projeler'}
+          </h1>
+          <div className="flex items-center border border-border rounded-md overflow-hidden h-7">
+            <button
+              onClick={() => setPageMode('projects')}
+              className={[
+                'px-2.5 h-full flex items-center gap-1 text-xs font-medium transition-colors',
+                pageMode === 'projects'
+                  ? 'bg-primary text-primary-foreground'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-muted',
+              ].join(' ')}
+            >
+              Projeler
+            </button>
+            <button
+              onClick={() => setPageMode('templates')}
+              className={[
+                'px-2.5 h-full flex items-center gap-1 text-xs font-medium transition-colors border-l border-border',
+                pageMode === 'templates'
+                  ? 'bg-primary text-primary-foreground'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-muted',
+              ].join(' ')}
+            >
+              <Star className="w-3 h-3" />
+              Şablonlar
+            </button>
+          </div>
+        </div>
         <div className="flex items-center gap-2">
           {/* View toggle */}
           <div className="flex items-center border border-border rounded-md overflow-hidden h-8">
@@ -536,6 +592,24 @@ export function ProjectsPage() {
         </div>
       </div>
 
+      {/* Template info banner */}
+      {pageMode === 'templates' && (
+        <div
+          className="flex items-start gap-3 px-4 py-3 rounded-xl text-sm border"
+          style={{
+            backgroundColor: 'hsl(43 96% 56% / 0.08)',
+            borderColor: 'hsl(43 96% 56% / 0.3)',
+            color: 'hsl(43 96% 25%)',
+          }}
+        >
+          <Star className="w-4 h-4 flex-shrink-0 mt-0.5 text-amber-500" />
+          <span>
+            Şablon olarak işaretlenen projeler, yeni projeler oluştururken referans olarak kullanılabilir.
+            Yeni proje oluştururken "Şablondan Oluştur" seçeneği ile şablon bilgilerini forma aktarabilirsiniz.
+          </span>
+        </div>
+      )}
+
       {/* Content */}
       {isLoading ? (
         <KanbanSkeleton />
@@ -682,13 +756,45 @@ export function ProjectsPage() {
       )}
 
       {/* New Project Dialog */}
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+      <Dialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) { setSelectedTemplateId(''); setForm(defaultForm); } }}>
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>Yeni Proje Oluştur</DialogTitle>
           </DialogHeader>
 
           <div className="space-y-4 py-2">
+            {/* Template selector */}
+            {templateProjects.length > 0 && (
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium text-foreground">Şablondan Oluştur</label>
+                <Select value={selectedTemplateId} onValueChange={handleSelectTemplate}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Şablon seçin (opsiyonel)...">
+                      {selectedTemplateId
+                        ? templateProjects.find((p) => String(p.id) === selectedTemplateId)?.name
+                        : undefined}
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">Şablon kullanma</SelectItem>
+                    {templateProjects.map((t) => (
+                      <SelectItem key={t.id} value={String(t.id)}>
+                        <div className="flex items-center gap-2">
+                          <Star className="w-3.5 h-3.5 text-amber-400 flex-shrink-0" fill="currentColor" />
+                          {t.name}
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {selectedTemplateId && (
+                  <p className="text-xs text-muted-foreground">
+                    Şablon bilgileri forma aktarıldı. İstediğiniz alanları düzenleyebilirsiniz.
+                  </p>
+                )}
+              </div>
+            )}
+
             {/* Name */}
             <div className="space-y-1.5">
               <label className="text-sm font-medium text-foreground">
