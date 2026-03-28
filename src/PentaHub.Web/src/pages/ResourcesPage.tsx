@@ -188,8 +188,8 @@ function AddResourceDialog({ open, onClose, preselectedProjectId }: AddResourceD
           <div className="space-y-1.5">
             <label className="text-sm font-medium">Görev (isteğe bağlı)</label>
             <Select
-              value={form.taskId}
-              onValueChange={(v) => setForm((p) => ({ ...p, taskId: v ?? '' }))}
+              value={form.taskId === '' ? 'none' : form.taskId}
+              onValueChange={(v) => setForm((p) => ({ ...p, taskId: v === 'none' ? '' : (v ?? '') }))}
               disabled={!form.projectId}
             >
               <SelectTrigger>
@@ -200,7 +200,7 @@ function AddResourceDialog({ open, onClose, preselectedProjectId }: AddResourceD
                 </SelectValue>
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Görev yok</SelectItem>
+                <SelectItem value="none">Görev yok</SelectItem>
                 {tasks.map((t) => (
                   <SelectItem key={t.id} value={String(t.id)}>
                     {t.title}

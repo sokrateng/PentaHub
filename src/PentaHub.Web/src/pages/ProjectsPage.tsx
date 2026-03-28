@@ -448,7 +448,7 @@ export function ProjectsPage() {
                   <label className="text-xs font-medium text-muted-foreground">Durum</label>
                   <Select
                     value={pendingFilter.status}
-                    onValueChange={(v) => setPendingFilter((prev) => ({ ...prev, status: v ?? '' }))}
+                    onValueChange={(v) => setPendingFilter((prev) => ({ ...prev, status: v ?? 'all' }))}
                   >
                     <SelectTrigger className="h-8 text-xs">
                       <SelectValue>
@@ -477,7 +477,7 @@ export function ProjectsPage() {
                   <label className="text-xs font-medium text-muted-foreground">Proje Yöneticisi</label>
                   <Select
                     value={pendingFilter.managerId}
-                    onValueChange={(v) => setPendingFilter((prev) => ({ ...prev, managerId: v ?? '' }))}
+                    onValueChange={(v) => setPendingFilter((prev) => ({ ...prev, managerId: v ?? 'all' }))}
                   >
                     <SelectTrigger className="h-8 text-xs">
                       <SelectValue>

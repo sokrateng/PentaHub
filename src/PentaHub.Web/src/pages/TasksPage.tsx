@@ -366,7 +366,7 @@ export function TasksPage() {
 
         <div className="flex items-center gap-2">
           {/* Assignee filter */}
-          <Select value={filterAssignee} onValueChange={(v) => setFilterAssignee(v ?? '')}>
+          <Select value={filterAssignee} onValueChange={(v) => setFilterAssignee(v ?? 'all')}>
             <SelectTrigger className="h-8 w-[150px] text-xs">
               <UserIcon className="w-3.5 h-3.5 mr-1 text-muted-foreground" />
               <SelectValue placeholder="Atanan">
@@ -386,7 +386,7 @@ export function TasksPage() {
           </Select>
 
           {/* Priority filter */}
-          <Select value={filterPriority} onValueChange={(v) => setFilterPriority(v ?? '')}>
+          <Select value={filterPriority} onValueChange={(v) => setFilterPriority(v ?? 'all')}>
             <SelectTrigger className="h-8 w-[130px] text-xs">
               <Filter className="w-3.5 h-3.5 mr-1 text-muted-foreground" />
               <SelectValue placeholder="Öncelik">

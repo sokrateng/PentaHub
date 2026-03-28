@@ -248,7 +248,7 @@ export function SprintsPage() {
         <h1 className="text-xl font-bold text-foreground">Sprintler</h1>
         <div className="flex items-center gap-2">
           {/* Project filter */}
-          <Select value={selectedProjectId} onValueChange={(v) => setSelectedProjectId(v ?? '')}>
+          <Select value={selectedProjectId} onValueChange={(v) => setSelectedProjectId(v ?? 'all')}>
             <SelectTrigger className="h-8 w-[200px] text-xs">
               <SelectValue placeholder="Tüm Projeler">
                 {selectedProjectId === 'all'

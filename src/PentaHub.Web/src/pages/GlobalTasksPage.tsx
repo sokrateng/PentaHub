@@ -151,7 +151,7 @@ export function GlobalTasksPage() {
 
         {/* Project filter + new task button */}
         <div className="flex items-center gap-2">
-          <Select value={selectedProjectId} onValueChange={(v) => setSelectedProjectId(v ?? '')}>
+          <Select value={selectedProjectId} onValueChange={(v) => setSelectedProjectId(v ?? 'all')}>
             <SelectTrigger className="h-8 w-[220px] text-xs">
               <SelectValue placeholder="Proje seçin...">
                 {selectedProjectId === 'all'
