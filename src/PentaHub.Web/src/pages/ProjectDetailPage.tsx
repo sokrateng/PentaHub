@@ -24,6 +24,8 @@ import {
   Plus,
   Trash2,
   StickyNote,
+  Link as LinkIcon,
+  BookOpen,
 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -34,6 +36,7 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
+  SelectValue,
 } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import {
@@ -157,6 +160,11 @@ export function ProjectDetailPage() {
   const [newEmailContent, setNewEmailContent] = useState('');
   const [addingNote, setAddingNote] = useState(false);
   const [addingEmail, setAddingEmail] = useState(false);
+  const [addingDoc, setAddingDoc] = useState(false);
+  const [docForm, setDocForm] = useState({ name: '', type: '', description: '', url: '' });
+  const [belgeSubTab, setBelgeSubTab] = useState<'all' | 'docs' | 'notes'>('all');
+
+  const DOC_TYPES = ['İster Dokümanı', 'Teknik Döküman', 'Toplantı Notu', 'Tasarım Dokümanı', 'Test Raporu', 'Diğer'];
 
   const updateMutation = useMutation({
     mutationFn: (payload: CreateProjectRequest) => projectsApi.update(projectId, payload),
@@ -200,6 +208,8 @@ export function ProjectDetailPage() {
       setNewEmailContent('');
       setAddingNote(false);
       setAddingEmail(false);
+      setAddingDoc(false);
+      setDocForm({ name: '', type: '', description: '', url: '' });
     },
   });
 
@@ -538,7 +548,7 @@ export function ProjectDetailPage() {
           {/* Kaynak Tahsisi */}
           <div
             className="bg-white rounded-lg border border-border p-3 flex flex-col items-center gap-1 text-center cursor-pointer hover:border-[hsl(174_72%_40%)] hover:bg-[hsl(174_72%_40%)]/5 hover:shadow-sm transition-all"
-            onClick={() => navigate(`/resources`)}
+            onClick={() => navigate(`/resources?projectId=${projectId}`)}
             title="Kaynaklara git"
           >
             <Users className="w-4 h-4" style={{ color: 'hsl(174 72% 40%)' }} />
@@ -1052,6 +1062,35 @@ export function ProjectDetailPage() {
           {/* AI Analysis tab */}
           <TabsContent value="AI Analysis" className="mt-5">
             <div className="space-y-4">
+              {/* AI Settings Note */}
+              {(() => {
+                const aiSettingsRaw = localStorage.getItem('ai_settings');
+                const aiCfg = aiSettingsRaw ? JSON.parse(aiSettingsRaw) : null;
+                const hasAiConfig = aiCfg?.provider && aiCfg?.apiKey;
+                return (
+                  <div
+                    className="flex items-start gap-2 px-4 py-3 rounded-lg border text-sm"
+                    style={
+                      hasAiConfig
+                        ? { backgroundColor: 'hsl(153 60% 97%)', borderColor: 'hsl(153 60% 60%)', color: 'hsl(153 60% 33%)' }
+                        : { backgroundColor: 'hsl(45 100% 95%)', borderColor: 'hsl(45 100% 60%)', color: 'hsl(38 92% 35%)' }
+                    }
+                  >
+                    <Info className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                    <span>
+                      {hasAiConfig
+                        ? `AI analizi etkin: ${aiCfg.provider} / ${aiCfg.model}`
+                        : 'AI ayarlarını yapılandırmak için '}
+                      {!hasAiConfig && (
+                        <Link to="/settings" className="font-medium underline">
+                          Ayarlar sayfasını ziyaret edin.
+                        </Link>
+                      )}
+                    </span>
+                  </div>
+                );
+              })()}
+
               {/* Risk Skoru */}
               <div className="bg-white rounded-xl border border-border p-6">
                 <div className="flex items-start justify-between gap-4">
@@ -1163,159 +1202,341 @@ export function ProjectDetailPage() {
 
           {/* Belgeler tab */}
           <TabsContent value="Belgeler" className="mt-5">
-            <div className="space-y-4">
-              {/* Actions */}
-              <div className="flex items-center gap-2 flex-wrap">
-                <Button
-                  size="sm"
-                  className="gap-1.5"
-                  style={{ backgroundColor: 'hsl(153 60% 33%)', color: 'white' }}
-                  onClick={() => { setAddingNote(true); setAddingEmail(false); }}
-                >
-                  <StickyNote className="w-4 h-4" />
-                  Not Ekle
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="gap-1.5"
-                  onClick={() => { setAddingEmail(true); setAddingNote(false); }}
-                >
-                  <Mail className="w-4 h-4" />
-                  E-posta Ekle
-                </Button>
-              </div>
+            {(() => {
+              const allComments = projectComments;
+              const docComments = allComments.filter(
+                (c) => c.commentType === CommentType.Note && c.content.startsWith('📄 **')
+              );
+              const noteComments = allComments.filter(
+                (c) => !(c.commentType === CommentType.Note && c.content.startsWith('📄 **'))
+              );
+              const filteredComments =
+                belgeSubTab === 'docs' ? docComments :
+                belgeSubTab === 'notes' ? noteComments :
+                allComments;
 
-              {/* Add Note form */}
-              {addingNote && (
-                <div className="bg-white rounded-xl border border-border p-4 space-y-3">
-                  <div className="flex items-center gap-2">
-                    <StickyNote className="w-4 h-4" style={{ color: 'hsl(153 60% 33%)' }} />
-                    <h4 className="text-sm font-semibold">Yeni Not</h4>
-                  </div>
-                  <textarea
-                    value={newNoteContent}
-                    onChange={(e) => setNewNoteContent(e.target.value)}
-                    placeholder="Not içeriğini yazın..."
-                    className="w-full min-h-[100px] rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring resize-none"
-                    autoFocus
-                  />
-                  <div className="flex items-center gap-2 justify-end">
-                    <Button variant="outline" size="sm" onClick={() => { setAddingNote(false); setNewNoteContent(''); }}>
-                      İptal
-                    </Button>
+              return (
+                <div className="space-y-4">
+                  {/* Actions */}
+                  <div className="flex items-center gap-2 flex-wrap">
                     <Button
                       size="sm"
-                      disabled={!newNoteContent.trim() || addCommentMutation.isPending}
-                      style={{ backgroundColor: 'hsl(153 60% 33%)', color: 'white' }}
-                      onClick={() => addCommentMutation.mutate({ content: newNoteContent.trim(), commentType: CommentType.Note })}
-                    >
-                      Kaydet
-                    </Button>
-                  </div>
-                </div>
-              )}
-
-              {/* Add Email form */}
-              {addingEmail && (
-                <div className="bg-white rounded-xl border border-border p-4 space-y-3">
-                  <div className="flex items-center gap-2">
-                    <Mail className="w-4 h-4" style={{ color: 'hsl(213 94% 48%)' }} />
-                    <h4 className="text-sm font-semibold">Yeni E-posta Notu</h4>
-                  </div>
-                  <textarea
-                    value={newEmailContent}
-                    onChange={(e) => setNewEmailContent(e.target.value)}
-                    placeholder="E-posta içeriğini yazın..."
-                    className="w-full min-h-[100px] rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring resize-none"
-                    autoFocus
-                  />
-                  <div className="flex items-center gap-2 justify-end">
-                    <Button variant="outline" size="sm" onClick={() => { setAddingEmail(false); setNewEmailContent(''); }}>
-                      İptal
-                    </Button>
-                    <Button
-                      size="sm"
-                      disabled={!newEmailContent.trim() || addCommentMutation.isPending}
+                      className="gap-1.5"
                       style={{ backgroundColor: 'hsl(213 94% 48%)', color: 'white' }}
-                      onClick={() => addCommentMutation.mutate({ content: newEmailContent.trim(), commentType: CommentType.Email })}
+                      onClick={() => { setAddingDoc(true); setAddingNote(false); setAddingEmail(false); }}
                     >
-                      Kaydet
+                      <FileText className="w-4 h-4" />
+                      Döküman Ekle
+                    </Button>
+                    <Button
+                      size="sm"
+                      className="gap-1.5"
+                      style={{ backgroundColor: 'hsl(153 60% 33%)', color: 'white' }}
+                      onClick={() => { setAddingNote(true); setAddingEmail(false); setAddingDoc(false); }}
+                    >
+                      <StickyNote className="w-4 h-4" />
+                      Not Ekle
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="gap-1.5"
+                      onClick={() => { setAddingEmail(true); setAddingNote(false); setAddingDoc(false); }}
+                    >
+                      <Mail className="w-4 h-4" />
+                      E-posta Ekle
                     </Button>
                   </div>
-                </div>
-              )}
 
-              {/* Documents list */}
-              <div className="bg-white rounded-xl border border-border overflow-hidden">
-                {commentsLoading ? (
-                  <div className="p-6 space-y-3 animate-pulse">
-                    {[1, 2, 3].map((i) => <div key={i} className="h-16 bg-muted rounded" />)}
-                  </div>
-                ) : projectComments.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center py-16 text-center">
-                    <FileText className="w-10 h-10 opacity-20 mb-3" style={{ color: 'hsl(213 94% 48%)' }} />
-                    <p className="text-sm font-medium text-foreground mb-1">Belge bulunamadı</p>
-                    <p className="text-xs text-muted-foreground">
-                      Not veya e-posta ekleyerek belge oluşturabilirsiniz.
-                    </p>
-                  </div>
-                ) : (
-                  <div className="divide-y divide-border">
-                    {projectComments.map((comment) => (
-                      <div key={comment.id} className="flex items-start gap-3 p-4 hover:bg-muted/20 transition-colors">
-                        <div
-                          className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
-                          style={{
-                            backgroundColor: comment.commentType === CommentType.Note
-                              ? 'hsl(153 60% 33% / 0.12)'
-                              : 'hsl(213 94% 48% / 0.12)',
+                  {/* Add Document form */}
+                  {addingDoc && (
+                    <div className="bg-white rounded-xl border border-border p-4 space-y-3">
+                      <div className="flex items-center gap-2">
+                        <BookOpen className="w-4 h-4" style={{ color: 'hsl(213 94% 48%)' }} />
+                        <h4 className="text-sm font-semibold">Yeni Döküman</h4>
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-1.5">
+                          <label className="text-xs font-medium text-foreground">Döküman Adı</label>
+                          <Input
+                            placeholder="Döküman adı..."
+                            value={docForm.name}
+                            onChange={(e) => setDocForm((p) => ({ ...p, name: e.target.value }))}
+                            autoFocus
+                          />
+                        </div>
+                        <div className="space-y-1.5">
+                          <label className="text-xs font-medium text-foreground">Döküman Türü</label>
+                          <Select
+                            value={docForm.type}
+                            onValueChange={(v) => setDocForm((p) => ({ ...p, type: v }))}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Tür seçin..." />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {DOC_TYPES.map((t) => (
+                                <SelectItem key={t} value={t}>{t}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-medium text-foreground">Açıklama</label>
+                        <textarea
+                          value={docForm.description}
+                          onChange={(e) => setDocForm((p) => ({ ...p, description: e.target.value }))}
+                          placeholder="Döküman açıklaması..."
+                          className="w-full min-h-[72px] rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring resize-none"
+                        />
+                      </div>
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-medium text-foreground">Link / URL</label>
+                        <div className="relative">
+                          <LinkIcon className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                          <Input
+                            placeholder="https://..."
+                            value={docForm.url}
+                            onChange={(e) => setDocForm((p) => ({ ...p, url: e.target.value }))}
+                            className="pl-8"
+                          />
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 justify-end">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => { setAddingDoc(false); setDocForm({ name: '', type: '', description: '', url: '' }); }}
+                        >
+                          İptal
+                        </Button>
+                        <Button
+                          size="sm"
+                          disabled={!docForm.name.trim() || addCommentMutation.isPending}
+                          style={{ backgroundColor: 'hsl(213 94% 48%)', color: 'white' }}
+                          onClick={() => {
+                            const content = `📄 **${docForm.name}**${docForm.type ? ` (${docForm.type})` : ''}\n${docForm.description || ''}\n${docForm.url ? `🔗 ${docForm.url}` : ''}`.trim();
+                            addCommentMutation.mutate({ content, commentType: CommentType.Note });
                           }}
                         >
-                          {comment.commentType === CommentType.Note ? (
-                            <StickyNote className="w-4 h-4" style={{ color: 'hsl(153 60% 33%)' }} />
-                          ) : (
-                            <Mail className="w-4 h-4" style={{ color: 'hsl(213 94% 48%)' }} />
-                          )}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-0.5 flex-wrap">
-                            <Badge
-                              variant="outline"
-                              className="text-[10px] px-1.5 py-0 h-4"
-                              style={
-                                comment.commentType === CommentType.Note
-                                  ? { color: 'hsl(153 60% 33%)', borderColor: 'hsl(153 60% 33% / 0.4)' }
-                                  : { color: 'hsl(213 94% 48%)', borderColor: 'hsl(213 94% 48% / 0.4)' }
-                              }
-                            >
-                              {comment.commentType === CommentType.Note ? 'Not' : 'E-posta'}
-                            </Badge>
-                            <span className="text-xs font-medium text-foreground">{comment.authorName}</span>
-                            <span className="text-xs text-muted-foreground">
-                              {new Date(comment.createdAt).toLocaleDateString('tr-TR', {
-                                day: '2-digit', month: 'long', year: 'numeric',
-                              })}
-                            </span>
-                          </div>
-                          <p className="text-sm text-foreground/80 leading-relaxed whitespace-pre-wrap break-words">
-                            {comment.content}
-                          </p>
-                        </div>
-                        <button
-                          onClick={() => deleteCommentMutation.mutate(comment.id)}
-                          disabled={deleteCommentMutation.isPending}
-                          className="flex-shrink-0 p-1.5 rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
-                          title="Sil"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
+                          Kaydet
+                        </Button>
                       </div>
-                    ))}
+                    </div>
+                  )}
+
+                  {/* Add Note form */}
+                  {addingNote && (
+                    <div className="bg-white rounded-xl border border-border p-4 space-y-3">
+                      <div className="flex items-center gap-2">
+                        <StickyNote className="w-4 h-4" style={{ color: 'hsl(153 60% 33%)' }} />
+                        <h4 className="text-sm font-semibold">Yeni Not</h4>
+                      </div>
+                      <textarea
+                        value={newNoteContent}
+                        onChange={(e) => setNewNoteContent(e.target.value)}
+                        placeholder="Not içeriğini yazın..."
+                        className="w-full min-h-[100px] rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring resize-none"
+                        autoFocus
+                      />
+                      <div className="flex items-center gap-2 justify-end">
+                        <Button variant="outline" size="sm" onClick={() => { setAddingNote(false); setNewNoteContent(''); }}>
+                          İptal
+                        </Button>
+                        <Button
+                          size="sm"
+                          disabled={!newNoteContent.trim() || addCommentMutation.isPending}
+                          style={{ backgroundColor: 'hsl(153 60% 33%)', color: 'white' }}
+                          onClick={() => addCommentMutation.mutate({ content: newNoteContent.trim(), commentType: CommentType.Note })}
+                        >
+                          Kaydet
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Add Email form */}
+                  {addingEmail && (
+                    <div className="bg-white rounded-xl border border-border p-4 space-y-3">
+                      <div className="flex items-center gap-2">
+                        <Mail className="w-4 h-4" style={{ color: 'hsl(213 94% 48%)' }} />
+                        <h4 className="text-sm font-semibold">Yeni E-posta Notu</h4>
+                      </div>
+                      <textarea
+                        value={newEmailContent}
+                        onChange={(e) => setNewEmailContent(e.target.value)}
+                        placeholder="E-posta içeriğini yazın..."
+                        className="w-full min-h-[100px] rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring resize-none"
+                        autoFocus
+                      />
+                      <div className="flex items-center gap-2 justify-end">
+                        <Button variant="outline" size="sm" onClick={() => { setAddingEmail(false); setNewEmailContent(''); }}>
+                          İptal
+                        </Button>
+                        <Button
+                          size="sm"
+                          disabled={!newEmailContent.trim() || addCommentMutation.isPending}
+                          style={{ backgroundColor: 'hsl(213 94% 48%)', color: 'white' }}
+                          onClick={() => addCommentMutation.mutate({ content: newEmailContent.trim(), commentType: CommentType.Email })}
+                        >
+                          Kaydet
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Sub-tabs: Dökümanlar / Notlar */}
+                  <div className="flex items-center gap-1 border-b border-border pb-0">
+                    {(['all', 'docs', 'notes'] as const).map((tab) => {
+                      const labels = { all: 'Tümü', docs: 'Dökümanlar', notes: 'Notlar & E-postalar' };
+                      return (
+                        <button
+                          key={tab}
+                          onClick={() => setBelgeSubTab(tab)}
+                          className={[
+                            'flex items-center gap-1.5 px-3 py-2 text-xs font-medium transition-colors border-b-2 -mb-px',
+                            belgeSubTab === tab
+                              ? 'border-primary text-primary'
+                              : 'border-transparent text-muted-foreground hover:text-foreground',
+                          ].join(' ')}
+                          style={belgeSubTab === tab ? { borderColor: 'hsl(213 94% 48%)', color: 'hsl(213 94% 48%)' } : {}}
+                        >
+                          {labels[tab]}
+                        </button>
+                      );
+                    })}
                   </div>
-                )}
-              </div>
-            </div>
+
+                  {/* Documents list */}
+                  <div className="bg-white rounded-xl border border-border overflow-hidden">
+                    {commentsLoading ? (
+                      <div className="p-6 space-y-3 animate-pulse">
+                        {[1, 2, 3].map((i) => <div key={i} className="h-16 bg-muted rounded" />)}
+                      </div>
+                    ) : filteredComments.length === 0 ? (
+                      <div className="flex flex-col items-center justify-center py-16 text-center">
+                        <FileText className="w-10 h-10 opacity-20 mb-3" style={{ color: 'hsl(213 94% 48%)' }} />
+                        <p className="text-sm font-medium text-foreground mb-1">Belge bulunamadı</p>
+                        <p className="text-xs text-muted-foreground">
+                          Not, e-posta veya döküman ekleyerek belge oluşturabilirsiniz.
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="divide-y divide-border">
+                        {filteredComments.map((comment) => {
+                          const isDoc = comment.commentType === CommentType.Note && comment.content.startsWith('📄 **');
+                          const isEmail = comment.commentType === CommentType.Email;
+                          // Parse doc content
+                          let docName = '';
+                          let docType = '';
+                          let docDesc = '';
+                          let docUrl = '';
+                          if (isDoc) {
+                            const lines = comment.content.split('\n');
+                            const headerMatch = lines[0]?.match(/^📄 \*\*(.+?)\*\*(?:\s+\((.+?)\))?/);
+                            docName = headerMatch?.[1] ?? '';
+                            docType = headerMatch?.[2] ?? '';
+                            docDesc = lines.slice(1).filter((l) => !l.startsWith('🔗')).join('\n').trim();
+                            const urlLine = lines.find((l) => l.startsWith('🔗 '));
+                            docUrl = urlLine ? urlLine.slice(3).trim() : '';
+                          }
+                          return (
+                            <div key={comment.id} className="flex items-start gap-3 p-4 hover:bg-muted/20 transition-colors">
+                              <div
+                                className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+                                style={{
+                                  backgroundColor: isDoc
+                                    ? 'hsl(213 94% 48% / 0.12)'
+                                    : comment.commentType === CommentType.Note
+                                    ? 'hsl(153 60% 33% / 0.12)'
+                                    : 'hsl(213 94% 48% / 0.12)',
+                                }}
+                              >
+                                {isDoc ? (
+                                  <FileText className="w-4 h-4" style={{ color: 'hsl(213 94% 48%)' }} />
+                                ) : comment.commentType === CommentType.Note ? (
+                                  <StickyNote className="w-4 h-4" style={{ color: 'hsl(153 60% 33%)' }} />
+                                ) : (
+                                  <Mail className="w-4 h-4" style={{ color: 'hsl(213 94% 48%)' }} />
+                                )}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2 mb-0.5 flex-wrap">
+                                  {isDoc ? (
+                                    <>
+                                      <Badge
+                                        variant="outline"
+                                        className="text-[10px] px-1.5 py-0 h-4"
+                                        style={{ color: 'hsl(213 94% 48%)', borderColor: 'hsl(213 94% 48% / 0.4)' }}
+                                      >
+                                        Döküman
+                                      </Badge>
+                                      {docType && (
+                                        <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4">
+                                          {docType}
+                                        </Badge>
+                                      )}
+                                    </>
+                                  ) : (
+                                    <Badge
+                                      variant="outline"
+                                      className="text-[10px] px-1.5 py-0 h-4"
+                                      style={
+                                        comment.commentType === CommentType.Note
+                                          ? { color: 'hsl(153 60% 33%)', borderColor: 'hsl(153 60% 33% / 0.4)' }
+                                          : { color: 'hsl(213 94% 48%)', borderColor: 'hsl(213 94% 48% / 0.4)' }
+                                      }
+                                    >
+                                      {comment.commentType === CommentType.Note ? 'Not' : 'E-posta'}
+                                    </Badge>
+                                  )}
+                                  <span className="text-xs font-medium text-foreground">{comment.authorName}</span>
+                                  <span className="text-xs text-muted-foreground">
+                                    {new Date(comment.createdAt).toLocaleDateString('tr-TR', {
+                                      day: '2-digit', month: 'long', year: 'numeric',
+                                    })}
+                                  </span>
+                                </div>
+                                {isDoc ? (
+                                  <div className="space-y-1">
+                                    <p className="text-sm font-medium text-foreground">{docName}</p>
+                                    {docDesc && <p className="text-xs text-foreground/70 leading-relaxed">{docDesc}</p>}
+                                    {docUrl && (
+                                      <a
+                                        href={docUrl}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="flex items-center gap-1 text-xs text-blue-600 hover:underline"
+                                      >
+                                        <LinkIcon className="w-3 h-3" />
+                                        {docUrl}
+                                      </a>
+                                    )}
+                                  </div>
+                                ) : (
+                                  <p className="text-sm text-foreground/80 leading-relaxed whitespace-pre-wrap break-words">
+                                    {comment.content}
+                                  </p>
+                                )}
+                              </div>
+                              <button
+                                onClick={() => deleteCommentMutation.mutate(comment.id)}
+                                disabled={deleteCommentMutation.isPending}
+                                className="flex-shrink-0 p-1.5 rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+                                title="Sil"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })()}
           </TabsContent>
         </Tabs>
       </div>

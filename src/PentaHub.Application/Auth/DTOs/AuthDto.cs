@@ -22,4 +22,12 @@ public class RegisterRequest
     public string Email { get; set; } = string.Empty;
     public string Password { get; set; } = string.Empty;
     public string? Department { get; set; }
+    public string? Role { get; set; }
+}
+
+public class ChangePasswordRequest
+{
+    public int UserId { get; set; }
+    public string CurrentPassword { get; set; } = string.Empty;
+    public string NewPassword { get; set; } = string.Empty;
 }

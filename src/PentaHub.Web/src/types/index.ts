@@ -398,6 +398,13 @@ export interface RegisterRequest {
   email: string;
   password: string;
   department?: string;
+  role?: string;
+}
+
+export interface ChangePasswordRequest {
+  userId: number;
+  currentPassword: string;
+  newPassword: string;
 }
 
 export interface LoginResponse {

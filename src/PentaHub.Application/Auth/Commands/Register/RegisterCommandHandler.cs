@@ -33,13 +33,16 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, LoginResp
         var passwordHash = BCrypt.Net.BCrypt.HashPassword(request.Password);
         var refreshToken = _jwtService.GenerateRefreshToken();
 
+        var validRoles = new[] { "User", "ProjectManager", "Admin" };
+        var role = validRoles.Contains(request.Role) ? request.Role! : "User";
+
         var user = new User
         {
             FullName = request.FullName,
             Email = request.Email,
             PasswordHash = passwordHash,
             Department = request.Department,
-            Role = "User",
+            Role = role,
             IsActive = true,
             RefreshToken = refreshToken,
             RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(7)

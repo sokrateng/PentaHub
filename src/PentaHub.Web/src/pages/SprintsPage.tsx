@@ -152,13 +152,27 @@ interface NewSprintForm {
   endDate: string;
 }
 
-const defaultForm: NewSprintForm = {
-  name: '',
-  projectId: '',
-  goal: '',
-  startDate: '',
-  endDate: '',
-};
+function getDefaultDates(): { defaultStart: string; defaultEnd: string } {
+  const today = new Date();
+  const twoWeeksLater = new Date(today);
+  twoWeeksLater.setDate(today.getDate() + 14);
+  const defaultStart = today.toISOString().split('T')[0];
+  const defaultEnd = twoWeeksLater.toISOString().split('T')[0];
+  return { defaultStart, defaultEnd };
+}
+
+function makeDefaultForm(): NewSprintForm {
+  const { defaultStart, defaultEnd } = getDefaultDates();
+  return {
+    name: '',
+    projectId: '',
+    goal: '',
+    startDate: defaultStart,
+    endDate: defaultEnd,
+  };
+}
+
+const defaultForm: NewSprintForm = makeDefaultForm();
 
 const FILTER_TABS: { key: FilterTab; label: string; icon: React.ReactNode }[] = [
   { key: 'all', label: 'Tümü', icon: <FileText className="w-3.5 h-3.5" /> },
@@ -180,7 +194,7 @@ export function SprintsPage() {
   const [selectedProjectId, setSelectedProjectId] = useState<string>('all');
   const [filterTab, setFilterTab] = useState<FilterTab>('all');
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [form, setForm] = useState<NewSprintForm>(defaultForm);
+  const [form, setForm] = useState<NewSprintForm>(makeDefaultForm);
 
   const { data: projectsResponse } = useQuery({
     queryKey: ['projects'],
@@ -205,7 +219,7 @@ export function SprintsPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['sprints'] });
       setDialogOpen(false);
-      setForm(defaultForm);
+      setForm(makeDefaultForm());
     },
   });
 
@@ -225,8 +239,11 @@ export function SprintsPage() {
   };
 
   const handleDialogOpen = () => {
+    const { defaultStart, defaultEnd } = getDefaultDates();
     setForm({
-      ...defaultForm,
+      ...makeDefaultForm(),
+      startDate: defaultStart,
+      endDate: defaultEnd,
       projectId: selectedProjectId !== 'all' ? selectedProjectId : '',
     });
     setDialogOpen(true);

@@ -3,6 +3,7 @@ using MediatR;
 using PentaHub.Application.Auth.Commands.Login;
 using PentaHub.Application.Auth.Commands.Register;
 using PentaHub.Application.Auth.Commands.RefreshToken;
+using PentaHub.Application.Auth.Commands.ChangePassword;
 using PentaHub.Application.Auth.DTOs;
 using PentaHub.Application.Common.Models;
 using PentaHub.Application.DTOs;
@@ -33,7 +34,8 @@ public static class AuthEndpoints
                 FullName = request.FullName,
                 Email = request.Email,
                 Password = request.Password,
-                Department = request.Department
+                Department = request.Department,
+                Role = request.Role
             };
             var result = await mediator.Send(command);
             return Results.Created("/api/auth/me", ApiResponse<LoginResponse>.Ok(result));
@@ -48,6 +50,39 @@ public static class AuthEndpoints
         })
         .WithName("RefreshToken")
         .Produces<ApiResponse<LoginResponse>>();
+
+        group.MapPost("/change-password", async (ChangePasswordRequest request, IMediator mediator, ClaimsPrincipal claimsPrincipal) =>
+        {
+            var userIdClaim = claimsPrincipal.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                ?? claimsPrincipal.FindFirst("sub")?.Value;
+
+            if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out var callerUserId))
+                return Results.Unauthorized();
+
+            // Allow changing own password only (admins could override but not implemented here)
+            var targetUserId = request.UserId > 0 ? request.UserId : callerUserId;
+            if (targetUserId != callerUserId)
+                return Results.Forbid();
+
+            try
+            {
+                var command = new ChangePasswordCommand
+                {
+                    UserId = targetUserId,
+                    CurrentPassword = request.CurrentPassword,
+                    NewPassword = request.NewPassword
+                };
+                await mediator.Send(command);
+                return Results.Ok(ApiResponse<bool>.Ok(true));
+            }
+            catch (InvalidOperationException ex)
+            {
+                return Results.BadRequest(ApiResponse<bool>.Fail(ex.Message));
+            }
+        })
+        .WithName("ChangePassword")
+        .RequireAuthorization()
+        .Produces<ApiResponse<bool>>();
 
         group.MapGet("/me", async (ClaimsPrincipal claimsPrincipal, IApplicationDbContext context) =>
         {

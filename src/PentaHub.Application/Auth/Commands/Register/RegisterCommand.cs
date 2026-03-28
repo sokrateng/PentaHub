@@ -9,4 +9,5 @@ public record RegisterCommand : IRequest<LoginResponse>
     public string Email { get; init; } = string.Empty;
     public string Password { get; init; } = string.Empty;
     public string? Department { get; init; }
+    public string? Role { get; init; }
 }

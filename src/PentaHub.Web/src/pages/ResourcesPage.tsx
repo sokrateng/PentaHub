@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Users, Plus, Trash2, Clock, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -55,6 +56,13 @@ function AddResourceDialog({ open, onClose, preselectedProjectId }: AddResourceD
     hoursPerDay: '8',
     notes: '',
   });
+
+  // Sync preselected project when dialog opens
+  useEffect(() => {
+    if (open && preselectedProjectId) {
+      setForm((p) => ({ ...p, projectId: String(preselectedProjectId), taskId: '' }));
+    }
+  }, [open, preselectedProjectId]);
 
   const { data: usersResponse } = useQuery({
     queryKey: ['users'],
@@ -287,8 +295,17 @@ function AddResourceDialog({ open, onClose, preselectedProjectId }: AddResourceD
 
 export function ResourcesPage() {
   const queryClient = useQueryClient();
-  const [selectedProjectId, setSelectedProjectId] = useState<string>('');
+  const [searchParams] = useSearchParams();
+  const urlProjectId = searchParams.get('projectId') ?? '';
+  const [selectedProjectId, setSelectedProjectId] = useState<string>(urlProjectId);
   const [addOpen, setAddOpen] = useState(false);
+
+  // Sync URL param when it changes
+  useEffect(() => {
+    if (urlProjectId) {
+      setSelectedProjectId(urlProjectId);
+    }
+  }, [urlProjectId]);
 
   const { data: projectsResponse } = useQuery({
     queryKey: ['projects-list'],

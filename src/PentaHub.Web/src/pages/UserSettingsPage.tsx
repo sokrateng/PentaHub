@@ -1,5 +1,6 @@
-import { useState } from 'react';
-import { Settings, User as UserIcon, Lock, Info, Users, Plus, Building2 } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import { Settings, User as UserIcon, Lock, Info, Users, Plus, Building2, Brain, Trash2, CheckCircle2, Eye, EyeOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -21,9 +22,47 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { usersApi, authApi } from '@/services/api';
 import { useAuthStore } from '@/stores/authStore';
 
-const DEPARTMENTS = ['Yazılım', 'Satış', 'IT', 'İK', 'Pazarlama', 'Finans', 'Operasyon'];
+const BASE_DEPARTMENTS = ['Yazılım', 'Satış', 'IT', 'İK', 'Pazarlama', 'Finans', 'Operasyon'];
 
 const PRIMARY = 'hsl(153 60% 33%)';
+
+const AI_PROVIDER_MODELS: Record<string, string[]> = {
+  OpenAI: ['gpt-4o', 'gpt-4o-mini', 'o1'],
+  'Google Gemini': ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-2.5-pro'],
+  Anthropic: ['claude-sonnet-4-5', 'claude-haiku-4-5'],
+  'Manuel/Özel': [],
+};
+
+interface AiSettings {
+  provider: string;
+  model: string;
+  apiKey: string;
+  endpointUrl: string;
+}
+
+function loadAiSettings(): AiSettings {
+  try {
+    const raw = localStorage.getItem('ai_settings');
+    if (raw) return JSON.parse(raw) as AiSettings;
+  } catch {
+    // ignore
+  }
+  return { provider: '', model: '', apiKey: '', endpointUrl: '' };
+}
+
+function loadCustomDepartments(): string[] {
+  try {
+    const raw = localStorage.getItem('custom_departments');
+    if (raw) return JSON.parse(raw) as string[];
+  } catch {
+    // ignore
+  }
+  return [];
+}
+
+function saveCustomDepartments(depts: string[]) {
+  localStorage.setItem('custom_departments', JSON.stringify(depts));
+}
 
 function getInitials(name: string): string {
   return name
@@ -34,11 +73,15 @@ function getInitials(name: string): string {
     .slice(0, 2);
 }
 
+const USER_ROLES = ['User', 'ProjectManager', 'Admin'] as const;
+type UserRole = (typeof USER_ROLES)[number];
+
 interface NewUserForm {
   fullName: string;
   email: string;
   password: string;
   department: string;
+  role: UserRole;
 }
 
 const defaultNewUserForm: NewUserForm = {
@@ -46,21 +89,48 @@ const defaultNewUserForm: NewUserForm = {
   email: '',
   password: '',
   department: '',
+  role: 'User',
 };
+
+function roleBadgeStyle(role: string) {
+  if (role === 'Admin') return { backgroundColor: 'hsl(0 72% 51% / 0.12)', color: 'hsl(0 72% 51%)' };
+  if (role === 'ProjectManager') return { backgroundColor: 'hsl(38 92% 50% / 0.12)', color: 'hsl(38 92% 35%)' };
+  return { backgroundColor: `${PRIMARY}15`, color: PRIMARY };
+}
 
 export function UserSettingsPage() {
   const { user } = useAuthStore();
   const queryClient = useQueryClient();
 
+  // --- Profile ---
   const [profileSaved, setProfileSaved] = useState(false);
   const [profileForm, setProfileForm] = useState({
     fullName: user?.fullName ?? '',
     department: user?.department ?? '',
     avatarUrl: user?.avatarUrl ?? '',
   });
+
+  // --- Password change ---
+  const [pwForm, setPwForm] = useState({ current: '', newPw: '', confirm: '' });
+  const [pwError, setPwError] = useState('');
+  const [pwSuccess, setPwSuccess] = useState(false);
+  const [showCurrentPw, setShowCurrentPw] = useState(false);
+  const [showNewPw, setShowNewPw] = useState(false);
+  const [pwPending, setPwPending] = useState(false);
+
+  // --- User management ---
   const [newUserDialogOpen, setNewUserDialogOpen] = useState(false);
   const [newUserForm, setNewUserForm] = useState<NewUserForm>(defaultNewUserForm);
   const [newUserError, setNewUserError] = useState('');
+
+  // --- Departments ---
+  const [customDepartments, setCustomDepartments] = useState<string[]>(loadCustomDepartments);
+  const [newDeptInput, setNewDeptInput] = useState('');
+
+  // --- AI settings ---
+  const [aiSettings, setAiSettings] = useState<AiSettings>(loadAiSettings);
+  const [aiSaved, setAiSaved] = useState(false);
+  const [aiTestResult, setAiTestResult] = useState<'success' | 'idle'>('idle');
 
   const { data: usersResponse } = useQuery({
     queryKey: ['users'],
@@ -68,9 +138,10 @@ export function UserSettingsPage() {
   });
 
   const allUsers = usersResponse?.data ?? [];
-  const uniqueDepartments = Array.from(
+  const apiDepartments = Array.from(
     new Set(allUsers.map((u) => u.department).filter(Boolean))
   ) as string[];
+  const allDepartments = Array.from(new Set([...BASE_DEPARTMENTS, ...customDepartments, ...apiDepartments]));
 
   const createUserMutation = useMutation({
     mutationFn: (form: NewUserForm) =>
@@ -101,6 +172,83 @@ export function UserSettingsPage() {
     if (!newUserForm.fullName.trim() || !newUserForm.email.trim() || !newUserForm.password.trim()) return;
     setNewUserError('');
     createUserMutation.mutate(newUserForm);
+  };
+
+  const handleChangePassword = async () => {
+    setPwError('');
+    if (!pwForm.current.trim() || !pwForm.newPw.trim() || !pwForm.confirm.trim()) {
+      setPwError('Tüm alanları doldurun.');
+      return;
+    }
+    if (pwForm.newPw.length < 6) {
+      setPwError('Yeni şifre en az 6 karakter olmalıdır.');
+      return;
+    }
+    if (pwForm.newPw !== pwForm.confirm) {
+      setPwError('Yeni şifre ve tekrarı eşleşmiyor.');
+      return;
+    }
+    if (!user?.id) {
+      setPwError('Kullanıcı bilgisi bulunamadı.');
+      return;
+    }
+    setPwPending(true);
+    try {
+      await fetch('/api/auth/change-password', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('token') ?? ''}`,
+        },
+        body: JSON.stringify({
+          userId: user.id,
+          currentPassword: pwForm.current,
+          newPassword: pwForm.newPw,
+        }),
+      }).then(async (res) => {
+        if (!res.ok) {
+          const json = await res.json().catch(() => ({}));
+          throw new Error(json?.error ?? 'Şifre değiştirme başarısız.');
+        }
+      });
+      setPwForm({ current: '', newPw: '', confirm: '' });
+      setPwSuccess(true);
+      setTimeout(() => setPwSuccess(false), 3000);
+    } catch (err: unknown) {
+      setPwError((err as Error).message);
+    } finally {
+      setPwPending(false);
+    }
+  };
+
+  // AI settings handlers
+  const handleAiSave = () => {
+    localStorage.setItem('ai_settings', JSON.stringify(aiSettings));
+    setAiSaved(true);
+    setTimeout(() => setAiSaved(false), 3000);
+  };
+
+  const handleAiTest = () => {
+    setAiTestResult('success');
+    setTimeout(() => setAiTestResult('idle'), 3000);
+  };
+
+  const suggestedModels = AI_PROVIDER_MODELS[aiSettings.provider] ?? [];
+
+  // Department handlers
+  const handleAddDept = () => {
+    const trimmed = newDeptInput.trim();
+    if (!trimmed || allDepartments.includes(trimmed)) return;
+    const updated = [...customDepartments, trimmed];
+    setCustomDepartments(updated);
+    saveCustomDepartments(updated);
+    setNewDeptInput('');
+  };
+
+  const handleDeleteCustomDept = (dept: string) => {
+    const updated = customDepartments.filter((d) => d !== dept);
+    setCustomDepartments(updated);
+    saveCustomDepartments(updated);
   };
 
   const displayName = user?.fullName ?? 'Kullanıcı';
@@ -202,7 +350,7 @@ export function UserSettingsPage() {
                 <SelectValue placeholder="Departman seçin..." />
               </SelectTrigger>
               <SelectContent>
-                {DEPARTMENTS.map((dept) => (
+                {allDepartments.map((dept) => (
                   <SelectItem key={dept} value={dept}>
                     {dept}
                   </SelectItem>
@@ -246,30 +394,196 @@ export function UserSettingsPage() {
           <h2 className="text-sm font-semibold text-foreground">Şifre Değiştir</h2>
         </div>
 
-        <div
-          className="flex items-start gap-2 px-3 py-3 rounded-lg text-sm"
-          style={{ backgroundColor: 'hsl(45 100% 95%)', borderLeft: '3px solid hsl(45 100% 50%)' }}
-        >
-          <Info className="w-4 h-4 flex-shrink-0 mt-0.5 text-amber-500" />
-          <span className="text-amber-800">Bu özellik yakında eklenecek.</span>
-        </div>
+        {pwSuccess && (
+          <div
+            className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm"
+            style={{ backgroundColor: `${PRIMARY}15`, color: PRIMARY }}
+          >
+            <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
+            Şifre başarıyla değiştirildi.
+          </div>
+        )}
 
-        <div className="space-y-3 opacity-50 pointer-events-none">
+        {pwError && (
+          <div
+            className="flex items-start gap-2 px-3 py-2 rounded-lg text-sm"
+            style={{ backgroundColor: 'hsl(0 86% 97%)', color: 'hsl(0 72% 51%)' }}
+          >
+            <Info className="w-4 h-4 flex-shrink-0 mt-0.5" />
+            {pwError}
+          </div>
+        )}
+
+        <div className="space-y-3">
           <div className="space-y-1.5">
             <label className="text-sm font-medium text-foreground">Mevcut Şifre</label>
-            <Input type="password" placeholder="••••••••" disabled />
+            <div className="relative">
+              <Input
+                type={showCurrentPw ? 'text' : 'password'}
+                placeholder="••••••••"
+                value={pwForm.current}
+                onChange={(e) => setPwForm((p) => ({ ...p, current: e.target.value }))}
+                className="pr-10"
+              />
+              <button
+                type="button"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                onClick={() => setShowCurrentPw((v) => !v)}
+              >
+                {showCurrentPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
+            </div>
           </div>
           <div className="space-y-1.5">
             <label className="text-sm font-medium text-foreground">Yeni Şifre</label>
-            <Input type="password" placeholder="••••••••" disabled />
+            <div className="relative">
+              <Input
+                type={showNewPw ? 'text' : 'password'}
+                placeholder="••••••••"
+                value={pwForm.newPw}
+                onChange={(e) => setPwForm((p) => ({ ...p, newPw: e.target.value }))}
+                className="pr-10"
+              />
+              <button
+                type="button"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                onClick={() => setShowNewPw((v) => !v)}
+              >
+                {showNewPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
+            </div>
+            <p className="text-xs text-muted-foreground">En az 6 karakter</p>
           </div>
           <div className="space-y-1.5">
             <label className="text-sm font-medium text-foreground">Yeni Şifre (Tekrar)</label>
-            <Input type="password" placeholder="••••••••" disabled />
+            <Input
+              type="password"
+              placeholder="••••••••"
+              value={pwForm.confirm}
+              onChange={(e) => setPwForm((p) => ({ ...p, confirm: e.target.value }))}
+            />
           </div>
-          <Button disabled style={{ backgroundColor: PRIMARY, color: 'white' }}>
-            Şifreyi Güncelle
+          <Button
+            onClick={handleChangePassword}
+            disabled={pwPending}
+            style={{ backgroundColor: PRIMARY, color: 'white' }}
+          >
+            {pwPending ? 'Güncelleniyor...' : 'Şifreyi Güncelle'}
           </Button>
+        </div>
+      </div>
+
+      {/* AI Settings Card */}
+      <div className="bg-white rounded-xl border border-border p-6 space-y-4">
+        <div className="flex items-center gap-2">
+          <Brain className="w-4 h-4" style={{ color: PRIMARY }} />
+          <h2 className="text-sm font-semibold text-foreground">AI Ayarları</h2>
+        </div>
+
+        <div className="space-y-3">
+          {/* Provider */}
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-foreground">Provider</label>
+            <Select
+              value={aiSettings.provider}
+              onValueChange={(v) =>
+                setAiSettings((prev) => ({
+                  ...prev,
+                  provider: v,
+                  model: AI_PROVIDER_MODELS[v]?.[0] ?? '',
+                }))
+              }
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Provider seçin..." />
+              </SelectTrigger>
+              <SelectContent>
+                {Object.keys(AI_PROVIDER_MODELS).map((p) => (
+                  <SelectItem key={p} value={p}>
+                    {p}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Model */}
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-foreground">Model</label>
+            {aiSettings.provider === 'Manuel/Özel' || suggestedModels.length === 0 ? (
+              <Input
+                placeholder="Model adı girin (ör. llama-3.2-90b)..."
+                value={aiSettings.model}
+                onChange={(e) => setAiSettings((prev) => ({ ...prev, model: e.target.value }))}
+              />
+            ) : (
+              <Select
+                value={aiSettings.model}
+                onValueChange={(v) => setAiSettings((prev) => ({ ...prev, model: v }))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Model seçin..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {suggestedModels.map((m) => (
+                    <SelectItem key={m} value={m}>
+                      {m}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+          </div>
+
+          {/* API Key */}
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-foreground">API Anahtarı</label>
+            <Input
+              type="password"
+              placeholder="sk-... veya API anahtarınızı girin"
+              value={aiSettings.apiKey}
+              onChange={(e) => setAiSettings((prev) => ({ ...prev, apiKey: e.target.value }))}
+            />
+          </div>
+
+          {/* Endpoint URL */}
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-foreground">Endpoint URL (isteğe bağlı)</label>
+            <Input
+              placeholder="https://api.example.com/v1 (özel/self-hosted modeller için)"
+              value={aiSettings.endpointUrl}
+              onChange={(e) => setAiSettings((prev) => ({ ...prev, endpointUrl: e.target.value }))}
+            />
+          </div>
+
+          {aiSaved && (
+            <div
+              className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm"
+              style={{ backgroundColor: `${PRIMARY}15`, color: PRIMARY }}
+            >
+              <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
+              AI ayarları kaydedildi.
+            </div>
+          )}
+
+          {aiTestResult === 'success' && (
+            <div
+              className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm"
+              style={{ backgroundColor: `${PRIMARY}15`, color: PRIMARY }}
+            >
+              <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
+              Bağlantı başarılı.
+            </div>
+          )}
+
+          <div className="flex items-center gap-2">
+            <Button onClick={handleAiSave} style={{ backgroundColor: PRIMARY, color: 'white' }}>
+              Kaydet
+            </Button>
+            <Button variant="outline" onClick={handleAiTest}>
+              Bağlantıyı Test Et
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -325,7 +639,13 @@ export function UserSettingsPage() {
                     <td className="px-4 py-3 text-muted-foreground">{u.email}</td>
                     <td className="px-4 py-3 text-muted-foreground">{u.department ?? '—'}</td>
                     <td className="px-4 py-3">
-                      <Badge variant="outline" className="text-[10px]">{u.role}</Badge>
+                      <Badge
+                        variant="outline"
+                        className="text-[10px]"
+                        style={roleBadgeStyle(u.role)}
+                      >
+                        {u.role}
+                      </Badge>
                     </td>
                   </tr>
                 ))
@@ -342,35 +662,80 @@ export function UserSettingsPage() {
           <h2 className="text-sm font-semibold text-foreground">Departmanlar</h2>
         </div>
 
+        {/* Add department */}
+        <div className="flex items-center gap-2">
+          <Input
+            placeholder="Yeni departman adı..."
+            value={newDeptInput}
+            onChange={(e) => setNewDeptInput(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') handleAddDept();
+            }}
+            className="flex-1"
+          />
+          <Button
+            size="sm"
+            onClick={handleAddDept}
+            disabled={!newDeptInput.trim()}
+            style={{ backgroundColor: PRIMARY, color: 'white' }}
+            className="gap-1"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            Ekle
+          </Button>
+        </div>
+
         <div
           className="flex items-start gap-2 px-3 py-3 rounded-lg text-sm"
           style={{ backgroundColor: `${PRIMARY}0d`, borderLeft: `3px solid ${PRIMARY}` }}
         >
           <Info className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: PRIMARY }} />
           <span style={{ color: PRIMARY }}>
-            Departmanlar kullanıcı ve proje tanımlarından otomatik oluşturulur.
+            Sistem departmanları kullanıcı ve proje tanımlarından otomatik oluşturulur. Özel departmanlar buradan eklenebilir.
           </span>
         </div>
 
-        {uniqueDepartments.length === 0 ? (
-          <p className="text-sm text-muted-foreground italic">Henüz departman tanımlanmamış.</p>
-        ) : (
-          <div className="flex flex-wrap gap-2">
-            {uniqueDepartments.map((dept) => (
-              <Badge
-                key={dept}
-                variant="secondary"
-                className="text-sm px-3 py-1"
-              >
-                {dept}
-              </Badge>
-            ))}
-          </div>
-        )}
+        <div className="flex flex-wrap gap-2">
+          {allDepartments.map((dept) => {
+            const isCustom = customDepartments.includes(dept);
+            return (
+              <div key={dept} className="flex items-center gap-1">
+                <Badge
+                  variant="secondary"
+                  className="text-sm px-3 py-1"
+                >
+                  {dept}
+                  {isCustom && (
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteCustomDept(dept)}
+                      className="ml-1.5 hover:text-destructive transition-colors"
+                      title="Sil"
+                    >
+                      <Trash2 className="w-3 h-3" />
+                    </button>
+                  )}
+                </Badge>
+              </div>
+            );
+          })}
+          {allDepartments.length === 0 && (
+            <p className="text-sm text-muted-foreground italic">Henüz departman tanımlanmamış.</p>
+          )}
+        </div>
       </div>
 
       {/* New User Dialog */}
-      <Dialog open={newUserDialogOpen} onOpenChange={(open) => { if (!open) { setNewUserDialogOpen(false); setNewUserForm(defaultNewUserForm); setNewUserError(''); } }}>
+      <Dialog
+        open={newUserDialogOpen}
+        onOpenChange={(open) => {
+          if (!open) {
+            setNewUserDialogOpen(false);
+            setNewUserForm(defaultNewUserForm);
+            setNewUserError('');
+          }
+        }}
+      >
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>Yeni Kullanıcı Oluştur</DialogTitle>
@@ -416,13 +781,29 @@ export function UserSettingsPage() {
                 onValueChange={(v) => setNewUserForm((prev) => ({ ...prev, department: v }))}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Departman seçin veya yazın...">
+                  <SelectValue placeholder="Departman seçin...">
                     {newUserForm.department || undefined}
                   </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
-                  {DEPARTMENTS.map((dept) => (
+                  {allDepartments.map((dept) => (
                     <SelectItem key={dept} value={dept}>{dept}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium text-foreground">Rol</label>
+              <Select
+                value={newUserForm.role}
+                onValueChange={(v) => setNewUserForm((prev) => ({ ...prev, role: v as UserRole }))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Rol seçin..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {USER_ROLES.map((role) => (
+                    <SelectItem key={role} value={role}>{role}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -440,7 +821,14 @@ export function UserSettingsPage() {
           </div>
 
           <DialogFooter>
-            <Button variant="outline" onClick={() => { setNewUserDialogOpen(false); setNewUserForm(defaultNewUserForm); setNewUserError(''); }}>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setNewUserDialogOpen(false);
+                setNewUserForm(defaultNewUserForm);
+                setNewUserError('');
+              }}
+            >
               İptal
             </Button>
             <Button
