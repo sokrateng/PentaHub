@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
-import { Bell, Search, ChevronRight, X, Menu } from 'lucide-react';
+import { Bell, Search, ChevronRight, X, Menu, LogOut } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import {
   DropdownMenu,
@@ -133,6 +133,16 @@ export function Header() {
           aria-label="Bildirimler"
         >
           <Bell className="w-4 h-4" />
+        </button>
+
+        {/* Logout button — mobile only */}
+        <button
+          className="md:hidden w-8 h-8 rounded-md flex items-center justify-center text-muted-foreground hover:text-destructive hover:bg-muted transition-colors"
+          onClick={handleLogout}
+          aria-label="Çıkış Yap"
+          title="Çıkış Yap"
+        >
+          <LogOut className="w-4 h-4" />
         </button>
 
         {/* User avatar dropdown */}
