@@ -21,8 +21,7 @@ import {
 } from '@/components/ui/dialog';
 import { projectsApi, usersApi, resourcesApi, tasksApi } from '@/services/api';
 import type { CreateResourceAllocationRequest } from '@/types';
-
-const PRIMARY = 'hsl(153 60% 33%)';
+import { PRIMARY_COLOR as PRIMARY } from '@/lib/constants';
 
 function formatDate(dateStr: string): string {
   if (!dateStr) return '-';

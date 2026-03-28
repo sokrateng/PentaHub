@@ -47,6 +47,8 @@ import {
 import { projectsApi, usersApi } from '@/services/api';
 import { ProjectStatus, PrivacyLevel, EvaluationType } from '@/types';
 import type { ProjectListItem, CreateProjectRequest } from '@/types';
+import { getInitials, formatDate } from '@/lib/utils';
+import { PRIMARY_COLOR } from '@/lib/constants';
 
 interface FilterState {
   status: string;
@@ -65,24 +67,11 @@ interface Column {
 
 const columns: Column[] = [
   { id: ProjectStatus.Beklemede, label: 'Beklemede', color: '#f59e0b' },
-  { id: ProjectStatus.DevamEden, label: 'Devam Eden', color: 'hsl(153 60% 33%)' },
+  { id: ProjectStatus.DevamEden, label: 'Devam Eden', color: PRIMARY_COLOR },
   { id: ProjectStatus.Tamamlandi, label: 'Tamamlandı', color: '#3b82f6' },
 ];
 
-function formatDate(dateStr?: string): string {
-  if (!dateStr) return '—';
-  return new Date(dateStr).toLocaleDateString('tr-TR', { day: '2-digit', month: 'short', year: 'numeric' });
-}
 
-function getInitials(name?: string): string {
-  if (!name) return '?';
-  return name
-    .split(' ')
-    .map((part) => part[0])
-    .join('')
-    .slice(0, 2)
-    .toUpperCase();
-}
 
 interface ProjectCardProps {
   project: ProjectListItem;
@@ -128,7 +117,7 @@ function ProjectCard({ project, index, onClick }: ProjectCardProps) {
             <div className="flex items-center gap-1.5 mb-2">
               <div
                 className="w-5 h-5 rounded-full flex items-center justify-center text-white text-[10px] font-semibold flex-shrink-0"
-                style={{ backgroundColor: 'hsl(153 60% 33%)' }}
+                style={{ backgroundColor: PRIMARY_COLOR }}
               >
                 {getInitials(project.projectManagerName)}
               </div>
@@ -436,7 +425,7 @@ export function ProjectsPage() {
               {hasActiveFilter && (
                 <span
                   className="w-1.5 h-1.5 rounded-full ml-0.5"
-                  style={{ backgroundColor: 'hsl(153 60% 33%)' }}
+                  style={{ backgroundColor: PRIMARY_COLOR }}
                 />
               )}
             </Button>
@@ -567,7 +556,7 @@ export function ProjectsPage() {
                   <Button
                     size="sm"
                     className="h-7 text-xs flex-1"
-                    style={{ backgroundColor: 'hsl(153 60% 33%)', color: 'white' }}
+                    style={{ backgroundColor: PRIMARY_COLOR, color: 'white' }}
                     onClick={() => {
                       setAppliedFilter(pendingFilter);
                       setFilterOpen(false);
@@ -583,7 +572,7 @@ export function ProjectsPage() {
           <Button
             size="sm"
             className="h-8 gap-1.5 text-xs"
-            style={{ backgroundColor: 'hsl(153 60% 33%)', color: 'white' }}
+            style={{ backgroundColor: PRIMARY_COLOR, color: 'white' }}
             onClick={() => setDialogOpen(true)}
           >
             <Plus className="w-3.5 h-3.5" />
@@ -715,7 +704,7 @@ export function ProjectsPage() {
                         <div className="flex items-center gap-1.5">
                           <div
                             className="w-5 h-5 rounded-full flex items-center justify-center text-white text-[10px] font-semibold"
-                            style={{ backgroundColor: 'hsl(153 60% 33%)' }}
+                            style={{ backgroundColor: PRIMARY_COLOR }}
                           >
                             {getInitials(project.projectManagerName)}
                           </div>
@@ -731,7 +720,7 @@ export function ProjectsPage() {
                         className="text-xs"
                         style={
                           project.status === ProjectStatus.DevamEden
-                            ? { backgroundColor: 'hsl(153 60% 33%)', color: 'white' }
+                            ? { backgroundColor: PRIMARY_COLOR, color: 'white' }
                             : {}
                         }
                       >
@@ -946,7 +935,7 @@ export function ProjectsPage() {
             <Button
               onClick={handleCreate}
               disabled={!form.name.trim() || createMutation.isPending}
-              style={{ backgroundColor: 'hsl(153 60% 33%)', color: 'white' }}
+              style={{ backgroundColor: PRIMARY_COLOR, color: 'white' }}
             >
               {createMutation.isPending ? 'Oluşturuluyor...' : 'Oluştur'}
             </Button>

@@ -357,4 +357,9 @@ export const authApi = {
     const { data } = await api.get<ApiResponse<User>>('/auth/me');
     return data;
   },
+
+  changePassword: async (payload: { userId: number; currentPassword: string; newPassword: string }) => {
+    const { data } = await api.post<ApiResponse<boolean>>('/auth/change-password', payload);
+    return data;
+  },
 };

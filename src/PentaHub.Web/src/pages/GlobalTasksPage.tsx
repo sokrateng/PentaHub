@@ -34,25 +34,8 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { projectsApi, tasksApi, usersApi } from '@/services/api';
 import type { ProjectTask, TaskKanbanColumn, CreateTaskRequest } from '@/types';
-
-function formatDate(dateStr?: string): string {
-  if (!dateStr) return '—';
-  return new Date(dateStr).toLocaleDateString('tr-TR', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-  });
-}
-
-function getInitials(name?: string): string {
-  if (!name) return '?';
-  return name
-    .split(' ')
-    .map((part) => part[0])
-    .join('')
-    .slice(0, 2)
-    .toUpperCase();
-}
+import { getInitials, formatDate } from '@/lib/utils';
+import { PRIMARY_COLOR } from '@/lib/constants';
 
 function PriorityStars({ priority }: { priority: number }) {
   if (priority === 0)
@@ -190,7 +173,7 @@ export function GlobalTasksPage() {
             <Button
               size="sm"
               className="h-8 gap-1.5 text-xs"
-              style={{ backgroundColor: 'hsl(153 60% 33%)', color: 'white' }}
+              style={{ backgroundColor: PRIMARY_COLOR, color: 'white' }}
               onClick={() => setTaskDialogOpen(true)}
             >
               <Plus className="w-3.5 h-3.5" />
@@ -286,7 +269,7 @@ export function GlobalTasksPage() {
                         <div className="flex items-center gap-1.5">
                           <div
                             className="w-5 h-5 rounded-full flex items-center justify-center text-white text-[10px] font-semibold flex-shrink-0"
-                            style={{ backgroundColor: 'hsl(153 60% 33%)' }}
+                            style={{ backgroundColor: PRIMARY_COLOR }}
                           >
                             {getInitials(task.assigneeName)}
                           </div>
@@ -446,7 +429,7 @@ export function GlobalTasksPage() {
             <Button
               onClick={handleCreateTask}
               disabled={!taskForm.title.trim() || createTaskMutation.isPending}
-              style={{ backgroundColor: 'hsl(153 60% 33%)', color: 'white' }}
+              style={{ backgroundColor: PRIMARY_COLOR, color: 'white' }}
             >
               {createTaskMutation.isPending ? 'Oluşturuluyor...' : 'Oluştur'}
             </Button>

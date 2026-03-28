@@ -14,13 +14,8 @@ import {
 import { timeSheetsApi, usersApi } from '@/services/api';
 import { useAuthStore } from '@/stores/authStore';
 import type { TimeSheet } from '@/types';
-
-const PRIMARY = 'hsl(153 60% 33%)';
-
-function formatDate(dateStr: string): string {
-  const d = new Date(dateStr);
-  return d.toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric' });
-}
+import { formatDate } from '@/lib/utils';
+import { PRIMARY_COLOR as PRIMARY } from '@/lib/constants';
 
 function getMonthRange(offset = 0): { startDate: string; endDate: string } {
   const now = new Date();
@@ -71,7 +66,7 @@ function groupEntries(timesheets: TimeSheet[], groupBy: GroupBy): GroupedEntry[]
   map.forEach((entries, key) => {
     const label =
       groupBy === 'date'
-        ? formatDate(key)
+        ? formatDate(key, 'numeric')
         : entries[0]?.taskTitle ?? key;
     result.push({
       key,
@@ -406,7 +401,7 @@ export function UserTimeSheetsPage() {
                           )}
                           {groupBy === 'task' && (
                             <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">
-                              {formatDate(ts.date)}
+                              {formatDate(ts.date, 'numeric')}
                             </td>
                           )}
                           {groupBy === 'date' && (

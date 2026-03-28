@@ -21,10 +21,10 @@ import {
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { usersApi, authApi } from '@/services/api';
 import { useAuthStore } from '@/stores/authStore';
+import { getInitials } from '@/lib/utils';
+import { PRIMARY_COLOR as PRIMARY } from '@/lib/constants';
 
 const BASE_DEPARTMENTS = ['Yazılım', 'Satış', 'IT', 'İK', 'Pazarlama', 'Finans', 'Operasyon'];
-
-const PRIMARY = 'hsl(153 60% 33%)';
 
 const AI_PROVIDER_MODELS: Record<string, string[]> = {
   OpenAI: ['gpt-4o', 'gpt-4o-mini', 'o1'],
@@ -62,15 +62,6 @@ function loadCustomDepartments(): string[] {
 
 function saveCustomDepartments(depts: string[]) {
   localStorage.setItem('custom_departments', JSON.stringify(depts));
-}
-
-function getInitials(name: string): string {
-  return name
-    .split(' ')
-    .map((p) => p[0])
-    .join('')
-    .toUpperCase()
-    .slice(0, 2);
 }
 
 const USER_ROLES = ['User', 'ProjectManager', 'Admin'] as const;
@@ -194,28 +185,17 @@ export function UserSettingsPage() {
     }
     setPwPending(true);
     try {
-      await fetch('/api/auth/change-password', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('token') ?? ''}`,
-        },
-        body: JSON.stringify({
-          userId: user.id,
-          currentPassword: pwForm.current,
-          newPassword: pwForm.newPw,
-        }),
-      }).then(async (res) => {
-        if (!res.ok) {
-          const json = await res.json().catch(() => ({}));
-          throw new Error(json?.error ?? 'Şifre değiştirme başarısız.');
-        }
+      await authApi.changePassword({
+        userId: user.id,
+        currentPassword: pwForm.current,
+        newPassword: pwForm.newPw,
       });
       setPwForm({ current: '', newPw: '', confirm: '' });
       setPwSuccess(true);
       setTimeout(() => setPwSuccess(false), 3000);
     } catch (err: unknown) {
-      setPwError((err as Error).message);
+      const msg = (err as { response?: { data?: { error?: string } } })?.response?.data?.error;
+      setPwError(msg ?? 'Şifre değiştirme başarısız.');
     } finally {
       setPwPending(false);
     }

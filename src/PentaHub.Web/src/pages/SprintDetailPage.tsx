@@ -31,25 +31,8 @@ import {
 import { sprintsApi, backlogApi } from '@/services/api';
 import { SprintState } from '@/types';
 import type { ProjectTask } from '@/types';
-
-function formatDate(dateStr?: string): string {
-  if (!dateStr) return '—';
-  return new Date(dateStr).toLocaleDateString('tr-TR', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-  });
-}
-
-function getInitials(name?: string): string {
-  if (!name) return '?';
-  return name
-    .split(' ')
-    .map((part) => part[0])
-    .join('')
-    .slice(0, 2)
-    .toUpperCase();
-}
+import { getInitials, formatDate } from '@/lib/utils';
+import { PRIMARY_COLOR } from '@/lib/constants';
 
 function PriorityStars({ priority }: { priority: number }) {
   if (priority === 0) return <span className="text-xs text-muted-foreground">—</span>;
@@ -200,7 +183,7 @@ function AddTasksDialog({
                     checked={selected.has(task.id)}
                     onChange={() => toggleTask(task.id)}
                     className="w-4 h-4 rounded border-border accent-primary"
-                    style={{ accentColor: 'hsl(153 60% 33%)' }}
+                    style={{ accentColor: PRIMARY_COLOR }}
                   />
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
@@ -234,7 +217,7 @@ function AddTasksDialog({
               <Button
                 onClick={handleAssign}
                 disabled={selected.size === 0 || isAssigning}
-                style={{ backgroundColor: 'hsl(153 60% 33%)', color: 'white' }}
+                style={{ backgroundColor: PRIMARY_COLOR, color: 'white' }}
               >
                 {isAssigning ? 'Atanıyor...' : 'Ata'}
               </Button>
@@ -289,7 +272,7 @@ function ConfirmStateChangeDialog({
           <Button
             onClick={onConfirm}
             disabled={isChanging}
-            style={{ backgroundColor: 'hsl(153 60% 33%)', color: 'white' }}
+            style={{ backgroundColor: PRIMARY_COLOR, color: 'white' }}
           >
             {isChanging ? 'Değiştiriliyor...' : 'Onayla'}
           </Button>
@@ -412,7 +395,7 @@ export function SprintDetailPage() {
             <Button
               size="sm"
               className="h-8 gap-1.5 text-xs"
-              style={{ backgroundColor: 'hsl(153 60% 33%)', color: 'white' }}
+              style={{ backgroundColor: PRIMARY_COLOR, color: 'white' }}
               onClick={() => handleStateBarClick(SprintState.InProgress)}
               disabled={changeStateMutation.isPending}
             >
@@ -423,7 +406,7 @@ export function SprintDetailPage() {
             <Button
               size="sm"
               className="h-8 gap-1.5 text-xs"
-              style={{ backgroundColor: 'hsl(153 60% 33%)', color: 'white' }}
+              style={{ backgroundColor: PRIMARY_COLOR, color: 'white' }}
               onClick={() => handleStateBarClick(SprintState.Done)}
               disabled={changeStateMutation.isPending}
             >
@@ -490,7 +473,7 @@ export function SprintDetailPage() {
           <Button
             size="sm"
             className="h-7 gap-1.5 text-xs"
-            style={{ backgroundColor: 'hsl(153 60% 33%)', color: 'white' }}
+            style={{ backgroundColor: PRIMARY_COLOR, color: 'white' }}
             onClick={() => setAddTasksOpen(true)}
           >
             <Plus className="w-3.5 h-3.5" />
@@ -536,7 +519,7 @@ export function SprintDetailPage() {
                       <div className="flex items-center gap-1.5">
                         <div
                           className="w-5 h-5 rounded-full flex items-center justify-center text-white text-[10px] font-semibold flex-shrink-0"
-                          style={{ backgroundColor: 'hsl(153 60% 33%)' }}
+                          style={{ backgroundColor: PRIMARY_COLOR }}
                         >
                           {getInitials(task.assigneeName)}
                         </div>

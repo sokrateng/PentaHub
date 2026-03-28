@@ -25,19 +25,8 @@ import { DependenciesTab } from '@/components/tasks/DependenciesTab';
 import { TimeSheetsTab } from '@/components/tasks/TimeSheetsTab';
 import { CollaborationPanel } from '@/components/collaboration/CollaborationPanel';
 import type { TaskStage } from '@/types';
-
-const PRIORITY_LABELS: Record<number, string> = {
-  0: 'Yok',
-  1: 'Düşük',
-  2: 'Orta',
-  3: 'Yüksek',
-  4: 'Kritik',
-};
-
-function formatDateForInput(dateStr?: string): string {
-  if (!dateStr) return '';
-  return dateStr.split('T')[0];
-}
+import { formatDateForInput } from '@/lib/utils';
+import { PRIORITY_LABELS } from '@/lib/constants';
 
 interface StarSelectorProps {
   value: number;

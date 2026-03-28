@@ -29,17 +29,10 @@ import {
 import { projectsApi, sprintsApi } from '@/services/api';
 import { SprintState } from '@/types';
 import type { Sprint, CreateSprintRequest } from '@/types';
+import { formatDate } from '@/lib/utils';
+import { PRIMARY_COLOR } from '@/lib/constants';
 
 type FilterTab = 'all' | 'draft' | 'inprogress' | 'done';
-
-function formatDate(dateStr?: string): string {
-  if (!dateStr) return '—';
-  return new Date(dateStr).toLocaleDateString('tr-TR', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-  });
-}
 
 function sprintStateBadge(state: SprintState) {
   switch (state) {
@@ -53,7 +46,7 @@ function sprintStateBadge(state: SprintState) {
       return (
         <Badge
           className="text-xs"
-          style={{ backgroundColor: 'hsl(153 60% 33%)', color: 'white' }}
+          style={{ backgroundColor: PRIMARY_COLOR, color: 'white' }}
         >
           Devam Eden
         </Badge>
@@ -125,7 +118,7 @@ function SprintCard({ sprint, onClick }: SprintCardProps) {
             className="h-1.5 rounded-full transition-all"
             style={{
               width: `${progressPercent}%`,
-              backgroundColor: 'hsl(153 60% 33%)',
+              backgroundColor: PRIMARY_COLOR,
             }}
           />
         </div>
@@ -277,7 +270,7 @@ export function SprintsPage() {
           <Button
             size="sm"
             className="h-8 gap-1.5 text-xs"
-            style={{ backgroundColor: 'hsl(153 60% 33%)', color: 'white' }}
+            style={{ backgroundColor: PRIMARY_COLOR, color: 'white' }}
             onClick={handleDialogOpen}
           >
             <Plus className="w-3.5 h-3.5" />
@@ -300,7 +293,7 @@ export function SprintsPage() {
             ].join(' ')}
             style={
               filterTab === tab.key
-                ? { borderColor: 'hsl(153 60% 33%)', color: 'hsl(153 60% 33%)' }
+                ? { borderColor: PRIMARY_COLOR, color: PRIMARY_COLOR }
                 : {}
             }
           >
@@ -434,7 +427,7 @@ export function SprintsPage() {
                 !form.endDate ||
                 createMutation.isPending
               }
-              style={{ backgroundColor: 'hsl(153 60% 33%)', color: 'white' }}
+              style={{ backgroundColor: PRIMARY_COLOR, color: 'white' }}
             >
               {createMutation.isPending ? 'Oluşturuluyor...' : 'Oluştur'}
             </Button>

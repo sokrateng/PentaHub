@@ -35,16 +35,8 @@ import {
 import { projectsApi, backlogApi, sprintsApi, tasksApi, usersApi } from '@/services/api';
 import { SprintState } from '@/types';
 import type { ProjectTask, CreateTaskRequest } from '@/types';
-
-function getInitials(name?: string): string {
-  if (!name) return '?';
-  return name
-    .split(' ')
-    .map((part) => part[0])
-    .join('')
-    .slice(0, 2)
-    .toUpperCase();
-}
+import { getInitials } from '@/lib/utils';
+import { PRIMARY_COLOR } from '@/lib/constants';
 
 function PriorityStars({ priority }: { priority: number }) {
   if (priority === 0) return <span className="text-xs text-muted-foreground">—</span>;
@@ -195,7 +187,7 @@ function AssignToSprintDialog({
           <Button
             onClick={handleAssign}
             disabled={!selectedSprintId || isAssigning}
-            style={{ backgroundColor: 'hsl(153 60% 33%)', color: 'white' }}
+            style={{ backgroundColor: PRIMARY_COLOR, color: 'white' }}
           >
             {isAssigning ? 'Atanıyor...' : 'Ata'}
           </Button>
@@ -235,6 +227,7 @@ export function BacklogPage() {
   const [assignDialogOpen, setAssignDialogOpen] = useState(false);
   const [taskDialogOpen, setTaskDialogOpen] = useState(false);
   const [taskForm, setTaskForm] = useState<NewTaskForm>(defaultTaskForm);
+  const [createTaskError, setCreateTaskError] = useState<string | null>(null);
 
   const { data: projectsResponse } = useQuery({
     queryKey: ['projects'],
@@ -276,9 +269,11 @@ export function BacklogPage() {
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
       setTaskDialogOpen(false);
       setTaskForm(defaultTaskForm);
+      setCreateTaskError(null);
     },
-    onError: (error) => {
-      console.error('Görev oluşturma hatası:', error);
+    onError: (error: unknown) => {
+      const msg = (error as { response?: { data?: { error?: string } } })?.response?.data?.error;
+      setCreateTaskError(msg ?? 'Görev oluşturulurken bir hata oluştu.');
     },
   });
 
@@ -357,7 +352,7 @@ export function BacklogPage() {
             <Button
               size="sm"
               className="h-8 gap-1.5 text-xs"
-              style={{ backgroundColor: 'hsl(153 60% 33%)', color: 'white' }}
+              style={{ backgroundColor: PRIMARY_COLOR, color: 'white' }}
               onClick={() => setTaskDialogOpen(true)}
             >
               <Plus className="w-3.5 h-3.5" />
@@ -369,7 +364,7 @@ export function BacklogPage() {
             <Button
               size="sm"
               className="h-8 gap-1.5 text-xs"
-              style={{ backgroundColor: 'hsl(153 60% 33%)', color: 'white' }}
+              style={{ backgroundColor: PRIMARY_COLOR, color: 'white' }}
               onClick={() => setAssignDialogOpen(true)}
             >
               <Layers className="w-3.5 h-3.5" />
@@ -404,7 +399,7 @@ export function BacklogPage() {
                     checked={selectedTaskIds.size === tasks.length && tasks.length > 0}
                     onChange={toggleAll}
                     className="w-4 h-4 rounded border-border"
-                    style={{ accentColor: 'hsl(153 60% 33%)' }}
+                    style={{ accentColor: PRIMARY_COLOR }}
                   />
                 </TableHead>
                 <TableHead className="w-[120px]">No</TableHead>
@@ -431,7 +426,7 @@ export function BacklogPage() {
                       checked={selectedTaskIds.has(task.id)}
                       onChange={() => toggleTask(task.id)}
                       className="w-4 h-4 rounded border-border"
-                      style={{ accentColor: 'hsl(153 60% 33%)' }}
+                      style={{ accentColor: PRIMARY_COLOR }}
                     />
                   </TableCell>
                   <TableCell>
@@ -486,7 +481,7 @@ export function BacklogPage() {
               <Button
                 size="sm"
                 className="h-7 gap-1.5 text-xs"
-                style={{ backgroundColor: 'hsl(153 60% 33%)', color: 'white' }}
+                style={{ backgroundColor: PRIMARY_COLOR, color: 'white' }}
                 onClick={() => setAssignDialogOpen(true)}
               >
                 <Layers className="w-3.5 h-3.5" />
@@ -617,6 +612,15 @@ export function BacklogPage() {
             </label>
           </div>
 
+          {createTaskError && (
+            <div
+              className="mx-0 mb-2 flex items-start gap-2 px-3 py-2 rounded-lg text-sm"
+              style={{ backgroundColor: 'hsl(0 86% 97%)', color: 'hsl(0 72% 51%)' }}
+            >
+              <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+              {createTaskError}
+            </div>
+          )}
           <DialogFooter>
             <Button variant="outline" onClick={() => setTaskDialogOpen(false)}>
               İptal
@@ -624,7 +628,7 @@ export function BacklogPage() {
             <Button
               onClick={handleCreateTask}
               disabled={!taskForm.title.trim() || createTaskMutation.isPending}
-              style={{ backgroundColor: 'hsl(153 60% 33%)', color: 'white' }}
+              style={{ backgroundColor: PRIMARY_COLOR, color: 'white' }}
             >
               {createTaskMutation.isPending ? 'Oluşturuluyor...' : 'Oluştur'}
             </Button>

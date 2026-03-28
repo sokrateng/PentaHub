@@ -50,6 +50,7 @@ import {
 import { projectsApi, usersApi, taskStagesApi, commentsApi } from '@/services/api';
 import { ProjectStatus, PrivacyLevel, EvaluationType, CommentType } from '@/types';
 import type { CreateProjectRequest } from '@/types';
+import { formatDateForInput } from '@/lib/utils';
 import { MilestonesTab } from '@/components/projects/MilestonesTab';
 import { CollaborationPanel } from '@/components/collaboration/CollaborationPanel';
 
@@ -93,10 +94,7 @@ const handoverChecklistItems = [
   'Bakım planı oluşturuldu',
 ];
 
-function formatDateForInput(dateStr?: string): string {
-  if (!dateStr) return '';
-  return dateStr.split('T')[0];
-}
+
 
 function formatDate(dateStr?: string): string {
   if (!dateStr) return '—';

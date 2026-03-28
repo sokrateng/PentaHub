@@ -36,6 +36,8 @@ import {
 } from '@/components/ui/select';
 import { tasksApi, usersApi, projectsApi } from '@/services/api';
 import type { ProjectTask, TaskKanbanColumn, CreateTaskRequest } from '@/types';
+import { getInitials, formatDate } from '@/lib/utils';
+import { PRIMARY_COLOR, PRIORITY_LABELS } from '@/lib/constants';
 
 const COLUMN_COLORS = [
   '#f59e0b',
@@ -47,28 +49,6 @@ const COLUMN_COLORS = [
   '#f97316',
 ];
 
-const PRIORITY_LABELS: Record<number, string> = {
-  0: 'Yok',
-  1: 'Düşük',
-  2: 'Orta',
-  3: 'Yüksek',
-  4: 'Kritik',
-};
-
-function formatDate(dateStr?: string): string {
-  if (!dateStr) return '';
-  return new Date(dateStr).toLocaleDateString('tr-TR', { day: '2-digit', month: 'short' });
-}
-
-function getInitials(name?: string): string {
-  if (!name) return '?';
-  return name
-    .split(' ')
-    .map((part) => part[0])
-    .join('')
-    .slice(0, 2)
-    .toUpperCase();
-}
 
 function PriorityStars({ priority }: { priority: number }) {
   if (priority === 0) return null;
@@ -127,7 +107,7 @@ function TaskCard({ task, index, onClick }: TaskCardProps) {
             <div className="flex items-center gap-1.5 mb-2">
               <div
                 className="w-5 h-5 rounded-full flex items-center justify-center text-white text-[10px] font-semibold flex-shrink-0"
-                style={{ backgroundColor: 'hsl(153 60% 33%)' }}
+                style={{ backgroundColor: PRIMARY_COLOR }}
               >
                 {getInitials(task.assigneeName)}
               </div>
@@ -438,7 +418,7 @@ export function TasksPage() {
           <Button
             size="sm"
             className="h-8 gap-1.5 text-xs"
-            style={{ backgroundColor: 'hsl(153 60% 33%)', color: 'white' }}
+            style={{ backgroundColor: PRIMARY_COLOR, color: 'white' }}
             onClick={() => setDialogOpen(true)}
           >
             <Plus className="w-3.5 h-3.5" />
@@ -661,7 +641,7 @@ export function TasksPage() {
             <Button
               onClick={handleCreate}
               disabled={!form.title.trim() || createMutation.isPending}
-              style={{ backgroundColor: 'hsl(153 60% 33%)', color: 'white' }}
+              style={{ backgroundColor: PRIMARY_COLOR, color: 'white' }}
             >
               {createMutation.isPending ? 'Oluşturuluyor...' : 'Oluştur'}
             </Button>
