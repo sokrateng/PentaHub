@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PentaHub — Sunum</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { height: 100%; overflow-x: hidden; font-family: 'Inter', system-ui, sans-serif; }
+    html { scroll-snap-type: y mandatory; scroll-behavior: smooth; }
+    .slide { width: 100vw; height: 100vh; height: 100dvh; overflow: hidden; scroll-snap-align: start; display: flex; flex-direction: column; position: relative; }
+    .slide-content { flex: 1; display: flex; flex-direction: column; justify-content: center; max-height: 100%; overflow: hidden; padding: clamp(2rem, 5vw, 5rem); }
+    :root { --title-size: clamp(2rem, 5vw, 4.5rem); --h2-size: clamp(1.5rem, 3.5vw, 2.8rem); --h3-size: clamp(1.1rem, 2.2vw, 1.6rem); --body-size: clamp(0.8rem, 1.4vw, 1.1rem); --small-size: clamp(0.7rem, 1vw, 0.85rem); --dark: #0a0e1a; --accent: #667eea; --accent2: #764ba2; --green: #10b981; --orange: #f59e0b; --red: #ef4444; }
+    .dark { background: var(--dark); color: #e2e8f0; }
+    .dark h1, .dark h2 { color: #fff; }
+    .light { background: #f8fafc; color: #1e293b; }
+    .gradient-bg { background: linear-gradient(135deg, #0a0e1a 0%, #1a1f3a 40%, #2d1b69 100%); color: #e2e8f0; }
+    .gradient-bg h1, .gradient-bg h2 { color: #fff; }
+    .accent-bg { background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 100%); color: #fff; }
+    h1 { font-size: var(--title-size); font-weight: 800; line-height: 1.1; letter-spacing: -0.03em; }
+    h2 { font-size: var(--h2-size); font-weight: 700; line-height: 1.2; letter-spacing: -0.02em; }
+    h3 { font-size: var(--h3-size); font-weight: 600; line-height: 1.3; }
+    p, li { font-size: var(--body-size); line-height: 1.6; }
+    .subtitle { font-size: clamp(1rem, 2vw, 1.4rem); font-weight: 300; opacity: 0.8; margin-top: 0.8rem; }
+    .label { font-size: var(--small-size); font-weight: 600; text-transform: uppercase; letter-spacing: 0.15em; opacity: 0.6; margin-bottom: 0.5rem; }
+    .highlight { color: var(--accent); }
+    .highlight-green { color: var(--green); }
+    .highlight-orange { color: var(--orange); }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(1rem, 3vw, 2.5rem); }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: clamp(0.8rem, 2vw, 2rem); }
+    .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: clamp(0.5rem, 1.5vw, 1.5rem); }
+    @media (max-width: 768px) { .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr 1fr; } }
+    .card { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: clamp(0.8rem, 2vw, 1.5rem); }
+    .light .card { background: #fff; border: 1px solid #e2e8f0; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+    .card .icon { font-size: clamp(1.2rem, 2.5vw, 2rem); margin-bottom: 0.4rem; }
+    .card h3 { margin-bottom: 0.3rem; }
+    .card p { opacity: 0.7; font-size: var(--small-size); }
+    .stat { text-align: center; }
+    .stat .number { font-size: clamp(2rem, 5vw, 4rem); font-weight: 900; background: linear-gradient(135deg, var(--accent), var(--accent2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; line-height: 1.1; }
+    .stat .stat-label { font-size: var(--small-size); opacity: 0.6; margin-top: 0.2rem; }
+    .flow-row { display: flex; align-items: center; gap: clamp(0.3rem, 1vw, 0.8rem); flex-wrap: wrap; justify-content: center; }
+    .flow-item { background: rgba(102,126,234,0.15); border: 1px solid rgba(102,126,234,0.3); border-radius: 8px; padding: 0.4rem 0.8rem; font-size: var(--small-size); font-weight: 500; }
+    .flow-arrow { font-size: 1.2rem; opacity: 0.4; }
+    .mini-table { width: 100%; border-collapse: collapse; font-size: var(--small-size); }
+    .mini-table th, .mini-table td { padding: 0.4rem 0.6rem; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.1); }
+    .mini-table th { font-weight: 600; opacity: 0.6; text-transform: uppercase; letter-spacing: 0.1em; font-size: clamp(0.6rem, 0.8vw, 0.75rem); }
+    .light .mini-table th, .light .mini-table td { border-color: #e2e8f0; }
+    .badge { display: inline-block; padding: 0.15rem 0.5rem; border-radius: 20px; font-size: clamp(0.6rem, 0.9vw, 0.75rem); font-weight: 600; }
+    .badge-blue { background: rgba(102,126,234,0.2); color: #93a5f6; }
+    .badge-green { background: rgba(16,185,129,0.2); color: #6ee7b7; }
+    .badge-orange { background: rgba(245,158,11,0.2); color: #fbbf24; }
+    .badge-red { background: rgba(239,68,68,0.2); color: #fca5a5; }
+    .light .badge-blue { background: #eef2ff; color: #4f46e5; }
+    .light .badge-green { background: #ecfdf5; color: #059669; }
+    .arch-box { border: 1px solid rgba(102,126,234,0.4); border-radius: 8px; padding: 0.5rem 1rem; text-align: center; font-size: var(--small-size); font-weight: 500; background: rgba(102,126,234,0.08); }
+    .arch-line { border-left: 2px dashed rgba(255,255,255,0.15); height: 24px; margin: 0 auto; width: 0; }
+    .reveal { opacity: 0; transform: translateY(20px); transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1); }
+    .reveal.visible { opacity: 1; transform: none; }
+    .reveal-delay-1 { transition-delay: 0.1s; }
+    .reveal-delay-2 { transition-delay: 0.2s; }
+    .reveal-delay-3 { transition-delay: 0.3s; }
+    .reveal-delay-4 { transition-delay: 0.4s; }
+    @media (prefers-reduced-motion: reduce) { .reveal { opacity: 1; transform: none; transition: none; } }
+    .progress { position: fixed; top: 0; left: 0; height: 3px; background: linear-gradient(90deg, var(--accent), var(--accent2)); z-index: 100; transition: width 0.3s; }
+    .slide-num { position: absolute; bottom: clamp(0.5rem, 1.5vw, 1.5rem); right: clamp(1rem, 3vw, 2.5rem); font-size: var(--small-size); opacity: 0.3; font-weight: 500; }
+    .divider { width: 60px; height: 3px; background: var(--accent); border-radius: 2px; margin: 0.8rem 0; }
+
+    /* Extra helpers */
+    .text-center { text-align: center; }
+    .mb-sm { margin-bottom: 0.5rem; }
+    .mb-md { margin-bottom: 1rem; }
+    .mb-lg { margin-bottom: 1.5rem; }
+    .mt-md { margin-top: 1rem; }
+    .mt-lg { margin-top: 1.5rem; }
+    .gap-sm { gap: 0.5rem; }
+    .flex-wrap-badges { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.6rem; }
+    .accent-bg .flow-item { background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); color: #fff; }
+    .accent-bg .flow-arrow { color: #fff; opacity: 0.6; }
+    .accent-bg .divider { background: rgba(255,255,255,0.5); }
+    .slide-header { margin-bottom: clamp(1rem, 2.5vw, 2rem); }
+    .stat-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: clamp(0.5rem, 1.5vw, 1.5rem); }
+    .stat-row + .stat-row { margin-top: clamp(0.5rem, 1.5vw, 1.5rem); }
+    .arch-flow { display: flex; align-items: center; justify-content: center; gap: 0.5rem; margin-top: 1.2rem; flex-wrap: wrap; }
+    .arch-flow .arch-box { flex: 1; min-width: 120px; }
+    .arch-flow .flow-arrow { color: rgba(102,126,234,0.6); font-size: 1.4rem; }
+  </style>
+</head>
+<body>
+
+<div id="progress" class="progress" style="width:0%"></div>
+
+<!-- ===================== SLIDE 1: KAPAK ===================== -->
+<section class="slide gradient-bg">
+  <div class="slide-content text-center" style="align-items:center;">
+    <div class="reveal">
+      <div class="label">Bilgi Teknolojileri</div>
+    </div>
+    <h1 class="reveal reveal-delay-1" style="margin-top:0.4rem;">Penta<span class="highlight">Hub</span></h1>
+    <p class="subtitle reveal reveal-delay-2">AI-Native Birleşik İş Yönetim Platformu</p>
+    <div class="divider reveal reveal-delay-3" style="margin:1.2rem auto;"></div>
+    <div class="flex-wrap-badges reveal reveal-delay-4" style="justify-content:center;">
+      <span class="badge badge-blue">.NET 9 + React 19</span>
+      <span class="badge badge-green">Claude AI ile Geliştirildi</span>
+      <span class="badge badge-orange">Canlı Demo: pentahub.vercel.app</span>
+    </div>
+  </div>
+  <div class="slide-num">1 / 12</div>
+</section>
+
+<!-- ===================== SLIDE 2: PROBLEM ===================== -->
+<section class="slide dark">
+  <div class="slide-content">
+    <div class="slide-header reveal">
+      <div class="label">Mevcut Durum</div>
+      <h2>Neden PentaHub'a <span class="highlight">İhtiyaç Duyduk?</span></h2>
+      <div class="divider"></div>
+    </div>
+    <div class="grid-2 reveal reveal-delay-1">
+      <div class="card">
+        <div class="icon">📋</div>
+        <h3>Dağınık Proje Takibi</h3>
+        <p>Her departman farklı araçla proje takibi yapıyor, verimlilik kaybi yaşanıyor.</p>
+      </div>
+      <div class="card">
+        <div class="icon">⏱️</div>
+        <h3>Manuel Raporlama</h3>
+        <p>Haftalık durum raporları Excel'de manuel hazırlanıyor, zaman kaybına neden oluyor.</p>
+      </div>
+      <div class="card">
+        <div class="icon">🔗</div>
+        <h3>Entegrasyon Eksikliği</h3>
+        <p>Görev, sprint, kaynak ve zaman takibi birbirinden bağımsız sistemlerde yürütülüyor.</p>
+      </div>
+      <div class="card">
+        <div class="icon">👥</div>
+        <h3>İşbirliği Zorluğu</h3>
+        <p>Ekip içi iletişim e-posta zincirleriyle yönetiliyor, bilgi kaybı yaşanıyor.</p>
+      </div>
+    </div>
+  </div>
+  <div class="slide-num">2 / 12</div>
+</section>
+
+<!-- ===================== SLIDE 3: COZUM ===================== -->
+<section class="slide accent-bg">
+  <div class="slide-content text-center" style="align-items:center;">
+    <div class="reveal">
+      <div class="label" style="opacity:0.7;">Çözüm</div>
+      <h2 style="margin-top:0.3rem;">Tek Platformda Tüm Proje <br>Yaşam Döngüsü</h2>
+      <div class="divider" style="margin:1rem auto;"></div>
+      <p class="subtitle" style="max-width:600px;margin:0 auto;">
+        Proje oluşturmadan teslimata kadar tüm adımları tek yerden yönetin
+      </p>
+    </div>
+    <div class="flow-row reveal reveal-delay-2" style="margin-top:clamp(1.2rem,3vw,2.5rem);">
+      <div class="flow-item">Proje Kanban</div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-item">Görev Yönetimi</div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-item">Sprint Planlama</div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-item">Gantt &amp; Bağımlılık</div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-item">Kaynak Takvimi</div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-item">Dashboard &amp; KPI</div>
+    </div>
+  </div>
+  <div class="slide-num" style="color:#fff;">3 / 12</div>
+</section>
+
+<!-- ===================== SLIDE 4: RAKAMLAR ===================== -->
+<section class="slide dark">
+  <div class="slide-content">
+    <div class="slide-header reveal">
+      <div class="label">Proje Kapsamı</div>
+      <h2>Rakamlarla <span class="highlight">PentaHub</span></h2>
+      <div class="divider"></div>
+    </div>
+    <div class="stat-row reveal reveal-delay-1">
+      <div class="card stat">
+        <div class="number">13</div>
+        <div class="stat-label">API Endpoint Grubu</div>
+      </div>
+      <div class="card stat">
+        <div class="number">40+</div>
+        <div class="stat-label">Görev Yönetimi</div>
+      </div>
+      <div class="card stat">
+        <div class="number">10</div>
+        <div class="stat-label">Veritabanı Tablosu</div>
+      </div>
+      <div class="card stat">
+        <div class="number">4</div>
+        <div class="stat-label">Kullanıcı Rolü</div>
+      </div>
+    </div>
+    <div class="stat-row reveal reveal-delay-2">
+      <div class="card stat">
+        <div class="number">9</div>
+        <div class="stat-label">Örnek Proje</div>
+      </div>
+      <div class="card stat">
+        <div class="number">55</div>
+        <div class="stat-label">Backend Test</div>
+      </div>
+      <div class="card stat">
+        <div class="number">25</div>
+        <div class="stat-label">BMS Görev</div>
+      </div>
+      <div class="card stat">
+        <div class="number">12</div>
+        <div class="stat-label">Kolaborasyon Notu</div>
+      </div>
+    </div>
+  </div>
+  <div class="slide-num">4 / 12</div>
+</section>
+
+<!-- ===================== SLIDE 5: MIMARI ===================== -->
+<section class="slide dark">
+  <div class="slide-content">
+    <div class="slide-header reveal">
+      <div class="label">Teknik Mimari</div>
+      <h2>Clean Architecture &amp; <span class="highlight">CQRS</span></h2>
+      <div class="divider"></div>
+    </div>
+    <div class="grid-3 reveal reveal-delay-1">
+      <div class="card">
+        <div class="icon">🎨</div>
+        <h3>Sunum Katmanı</h3>
+        <p>React 19, TypeScript, shadcn/ui, Tailwind CSS, Zustand</p>
+        <div class="flex-wrap-badges">
+          <span class="badge badge-blue">React</span>
+          <span class="badge badge-blue">Vite</span>
+          <span class="badge badge-blue">Tailwind</span>
+        </div>
+      </div>
+      <div class="card">
+        <div class="icon">⚡</div>
+        <h3>İş Mantığı</h3>
+        <p>.NET 9 Minimal API, MediatR CQRS, FluentValidation</p>
+        <div class="flex-wrap-badges">
+          <span class="badge badge-green">.NET 9</span>
+          <span class="badge badge-green">MediatR</span>
+        </div>
+      </div>
+      <div class="card">
+        <div class="icon">💾</div>
+        <h3>Veri Katmanı</h3>
+        <p>EF Core 9, SQLite/MSSQL, SignalR, Serilog</p>
+        <div class="flex-wrap-badges">
+          <span class="badge badge-orange">EF Core</span>
+          <span class="badge badge-orange">SQLite</span>
+        </div>
+      </div>
+    </div>
+    <div class="arch-flow reveal reveal-delay-2">
+      <div class="arch-box">React SPA</div>
+      <span class="flow-arrow" style="color:rgba(102,126,234,0.6);font-size:1.4rem;">⇄</span>
+      <div class="arch-box">.NET API</div>
+      <span class="flow-arrow" style="color:rgba(102,126,234,0.6);font-size:1.4rem;">⇄</span>
+      <div class="arch-box">EF Core</div>
+      <span class="flow-arrow" style="color:rgba(102,126,234,0.6);font-size:1.4rem;">⇄</span>
+      <div class="arch-box">SQLite / MSSQL</div>
+    </div>
+  </div>
+  <div class="slide-num">5 / 12</div>
+</section>
+
+<!-- ===================== SLIDE 6: OZELLIKLER ===================== -->
+<section class="slide dark">
+  <div class="slide-content">
+    <div class="slide-header reveal">
+      <div class="label">Platform Özellikleri</div>
+      <h2>Neler <span class="highlight">Yapabilirsiniz?</span></h2>
+      <div class="divider"></div>
+    </div>
+    <div class="grid-3 reveal reveal-delay-1">
+      <div class="card">
+        <div class="icon">📊</div>
+        <h3>Proje Kanban</h3>
+        <p>Sürükle-bırak ile proje durumlarını yönetin.</p>
+      </div>
+      <div class="card">
+        <div class="icon">✅</div>
+        <h3>Görev &amp; Sprint</h3>
+        <p>Kanban board, checklist, bağımlılık, backlog yönetimi.</p>
+      </div>
+      <div class="card">
+        <div class="icon">📈</div>
+        <h3>Gantt Chart</h3>
+        <p>Görev zamanlama ve bağımlılık görüntüleme.</p>
+      </div>
+      <div class="card">
+        <div class="icon">👤</div>
+        <h3>Kaynak Takvimi</h3>
+        <p>Kullanıcı bazlı gün/saat tahsisi ve planlama.</p>
+      </div>
+      <div class="card">
+        <div class="icon">💬</div>
+        <h3>Kolaborasyon</h3>
+        <p>Not, e-posta, toplantı, hand-over, sistem logu.</p>
+      </div>
+      <div class="card">
+        <div class="icon">📉</div>
+        <h3>Dashboard</h3>
+        <p>KPI kartları, grafikler, departman analizleri.</p>
+      </div>
+    </div>
+  </div>
+  <div class="slide-num">6 / 12</div>
+</section>
+
+<!-- ===================== SLIDE 7: PENTA BMS DEMO ===================== -->
+<section class="slide dark">
+  <div class="slide-content">
+    <div class="slide-header reveal">
+      <div class="label">Demo Projesi</div>
+      <h2>Penta BMS — <span class="highlight">Bütçe Yönetim Sistemi</span></h2>
+      <div class="divider"></div>
+    </div>
+    <div class="grid-2 reveal reveal-delay-1">
+      <div>
+        <table class="mini-table">
+          <thead>
+            <tr><th>Metrik</th><th>Değer</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Proje Yöneticisi</td><td>Yasemin Kaya (CIO)</td></tr>
+            <tr><td>Toplam Görev</td><td>25 (BMS-001 ~ BMS-025)</td></tr>
+            <tr><td>Sprint Sayısı</td><td>4 (Hazırlık → Faz 3)</td></tr>
+            <tr><td>Kilometre Taşı</td><td>5</td></tr>
+            <tr><td>Kaynak Tahsisi</td><td>5 kişi</td></tr>
+            <tr><td>Zaman Kaydı</td><td>15 giriş</td></tr>
+            <tr><td>Tahmini Maliyet</td><td>1.35M - 2.2M TL</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="card">
+        <h3 style="margin-bottom:0.8rem;">3 Fazlı Geliştirme</h3>
+        <table class="mini-table">
+          <tbody>
+            <tr>
+              <td><span class="badge badge-green">Faz 1</span></td>
+              <td>Satış &amp; OPEX Entegrasyonu</td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-blue">Faz 2</span></td>
+              <td>IFRS Finansal Tablolar</td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-orange">Faz 3</span></td>
+              <td>Net Kâr Dağıtım Modeli</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <div class="slide-num">7 / 12</div>
+</section>
+
+<!-- ===================== SLIDE 8: GUVENLIK ===================== -->
+<section class="slide dark">
+  <div class="slide-content">
+    <div class="slide-header reveal">
+      <div class="label">Güvenlik &amp; Uyumluluk</div>
+      <h2>Kurumsal <span class="highlight">Güvenlik Standartları</span></h2>
+      <div class="divider"></div>
+    </div>
+    <div class="grid-3 reveal reveal-delay-1">
+      <div class="card">
+        <div class="icon">🔑</div>
+        <h3>JWT Authentication</h3>
+        <p>Bearer token ile güvenli kimlik doğrulama.</p>
+      </div>
+      <div class="card">
+        <div class="icon">🛡️</div>
+        <h3>RBAC Yetkilendirme</h3>
+        <p>Admin, ProjectManager, User rolleri ile granüler erişim.</p>
+      </div>
+      <div class="card">
+        <div class="icon">🔒</div>
+        <h3>Şifre Güvenliği</h3>
+        <p>BCrypt hash ile şifre saklama, plain-text asla tutulmaz.</p>
+      </div>
+      <div class="card">
+        <div class="icon">📝</div>
+        <h3>Audit Trail</h3>
+        <p>Tüm işlemler CreatedAt / UpdatedAt / CreatedBy ile izlenir.</p>
+      </div>
+      <div class="card">
+        <div class="icon">🗑️</div>
+        <h3>Soft Delete</h3>
+        <p>Veri kaybı önleme, geri alınabilir silme mekanizması.</p>
+      </div>
+      <div class="card">
+        <div class="icon">🌐</div>
+        <h3>CORS Politikası</h3>
+        <p>Origin bazlı erişim kontrolü ile güvenli API katmanı.</p>
+      </div>
+    </div>
+  </div>
+  <div class="slide-num">8 / 12</div>
+</section>
+
+<!-- ===================== SLIDE 9: IS KOLAYLIKLARI ===================== -->
+<section class="slide light">
+  <div class="slide-content">
+    <div class="slide-header reveal">
+      <div class="label" style="color:var(--accent);">Katma Değer</div>
+      <h2>İşimizi Nasıl <span class="highlight">Kolaylaştırıyor?</span></h2>
+      <div class="divider"></div>
+    </div>
+    <div class="grid-3 reveal reveal-delay-1">
+      <div class="card">
+        <div class="icon">⚡</div>
+        <h3>Hız</h3>
+        <p>Proje oluşturmadan görev takibine saniyeler içinde geçiş.</p>
+      </div>
+      <div class="card">
+        <div class="icon">📊</div>
+        <h3>Görünürlük</h3>
+        <p>Dashboard ile tüm portföy tek bakışta izlenebilir.</p>
+      </div>
+      <div class="card">
+        <div class="icon">🤝</div>
+        <h3>İşbirliği</h3>
+        <p>Kolaborasyon panelinde tüm iletişim tek yerde toplanır.</p>
+      </div>
+      <div class="card">
+        <div class="icon">📅</div>
+        <h3>Planlama</h3>
+        <p>Gantt, sprint, kaynak takvimi ile kesin ve gerçekçi planlama.</p>
+      </div>
+      <div class="card">
+        <div class="icon">🔍</div>
+        <h3>İzlenebilirlik</h3>
+        <p>Zaman çizelgesi ile saat bazlı proje takibi yapılabilir.</p>
+      </div>
+      <div class="card">
+        <div class="icon">💰</div>
+        <h3>Maliyet Kontrolü</h3>
+        <p>Faturalanabilir / faturalanmaz görev ayrımı ile net maliyet.</p>
+      </div>
+    </div>
+  </div>
+  <div class="slide-num">9 / 12</div>
+</section>
+
+<!-- ===================== SLIDE 10: EFOR ===================== -->
+<section class="slide dark">
+  <div class="slide-content">
+    <div class="slide-header reveal">
+      <div class="label">Geliştirme Eforu</div>
+      <h2>AI Destekli <span class="highlight">Hızlı Geliştirme</span></h2>
+      <div class="divider"></div>
+    </div>
+    <div class="grid-2 reveal reveal-delay-1">
+      <div>
+        <table class="mini-table">
+          <thead>
+            <tr><th>Metrik</th><th>Değer</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Geliştirme Yöntemi</td><td>Claude AI (Vibe Coding)</td></tr>
+            <tr><td>Backend</td><td>C# .NET 9, 13 endpoint grubu</td></tr>
+            <tr><td>Frontend</td><td>React 19, 18 sayfa</td></tr>
+            <tr><td>Test</td><td>55 unit / integration test</td></tr>
+            <tr><td>Veritabanı</td><td>10 tablo, EF Core migration</td></tr>
+            <tr><td>Deploy</td><td>Vercel + Render (free tier)</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="card">
+        <h3 style="margin-bottom:0.8rem;">Faz Planı</h3>
+        <table class="mini-table">
+          <tbody>
+            <tr>
+              <td><span class="badge badge-green">Faz 1–4</span></td>
+              <td>Proje, Görev, Sprint, Kanban</td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-blue">Faz 5–7</span></td>
+              <td>Gantt, Kaynak, Zaman Çizelgesi</td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-orange">Faz 8–9</span></td>
+              <td>Kolaborasyon, Dashboard, Kontak</td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-red">Faz 10</span></td>
+              <td>Auth (JWT), RBAC</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <div class="slide-num">10 / 12</div>
+</section>
+
+<!-- ===================== SLIDE 11: SONRAKI ADIMLAR ===================== -->
+<section class="slide dark">
+  <div class="slide-content">
+    <div class="slide-header reveal">
+      <div class="label">Yol Haritası</div>
+      <h2>Sonraki <span class="highlight">Adımlar</span></h2>
+      <div class="divider"></div>
+    </div>
+    <div class="grid-2 reveal reveal-delay-1">
+      <div class="card">
+        <div class="icon">🔜</div>
+        <h3>Kısa Vadeli <span class="badge badge-green" style="margin-left:0.3rem;">Yakın</span></h3>
+        <p style="margin-top:0.4rem;">Sales Cloud modülü, Helpdesk entegrasyonu</p>
+      </div>
+      <div class="card">
+        <div class="icon">📱</div>
+        <h3>Orta Vadeli <span class="badge badge-blue" style="margin-left:0.3rem;">6 Ay</span></h3>
+        <p style="margin-top:0.4rem;">Mobil uygulama (React Native), push bildirimler</p>
+      </div>
+      <div class="card">
+        <div class="icon">🏢</div>
+        <h3>Uzun Vadeli <span class="badge badge-orange" style="margin-left:0.3rem;">1 Yıl</span></h3>
+        <p style="margin-top:0.4rem;">Invoice modülü, multi-tenant, SAP entegrasyonu</p>
+      </div>
+      <div class="card">
+        <div class="icon">🤖</div>
+        <h3>AI Vizyonu <span class="badge badge-red" style="margin-left:0.3rem;">Gelecek</span></h3>
+        <p style="margin-top:0.4rem;">Yapay zeka destekli proje risk analizi, otomatik görev önerisi</p>
+      </div>
+    </div>
+  </div>
+  <div class="slide-num">11 / 12</div>
+</section>
+
+<!-- ===================== SLIDE 12: KAPANIS ===================== -->
+<section class="slide gradient-bg">
+  <div class="slide-content text-center" style="align-items:center;">
+    <div class="reveal">
+      <div class="label">Sonuç</div>
+      <h2 style="margin-top:0.3rem;">Proje Yönetiminde <br><span class="highlight">Yeni Nesil</span></h2>
+      <div class="divider" style="margin:1rem auto;"></div>
+    </div>
+    <div class="grid-3 reveal reveal-delay-2" style="max-width:700px;margin:0 auto;">
+      <div class="card stat">
+        <div class="number">9+</div>
+        <div class="stat-label">Proje Yönetimi</div>
+      </div>
+      <div class="card stat">
+        <div class="number">40+</div>
+        <div class="stat-label">Görev Takibi</div>
+      </div>
+      <div class="card stat">
+        <div class="number">%100</div>
+        <div class="stat-label">AI ile Geliştirildi</div>
+      </div>
+    </div>
+    <p class="reveal reveal-delay-3" style="margin-top:clamp(1rem,3vw,2.5rem);opacity:0.45;font-size:var(--small-size);">
+      PentaHub — Bilgi Teknolojileri, Mart 2026
+    </p>
+  </div>
+  <div class="slide-num">12 / 12</div>
+</section>
+
+<script>
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible') })
+  }, { threshold: 0.15 })
+  document.querySelectorAll('.reveal').forEach(el => observer.observe(el))
+
+  const slides = document.querySelectorAll('.slide')
+  const progress = document.getElementById('progress')
+
+  function updateProgress() {
+    const scrollTop = window.scrollY || document.documentElement.scrollTop
+    const docHeight = document.documentElement.scrollHeight - window.innerHeight
+    const pct = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0
+    progress.style.width = pct + '%'
+  }
+  window.addEventListener('scroll', updateProgress)
+
+  document.addEventListener('keydown', (e) => {
+    const current = Math.round(window.scrollY / window.innerHeight)
+    if (e.key === 'ArrowDown' || e.key === 'ArrowRight' || e.key === ' ') {
+      e.preventDefault()
+      if (current < slides.length - 1) slides[current + 1].scrollIntoView({ behavior: 'smooth' })
+    }
+    if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
+      e.preventDefault()
+      if (current > 0) slides[current - 1].scrollIntoView({ behavior: 'smooth' })
+    }
+    if (e.key === 'Home') { e.preventDefault(); slides[0].scrollIntoView({ behavior: 'smooth' }) }
+    if (e.key === 'End') { e.preventDefault(); slides[slides.length - 1].scrollIntoView({ behavior: 'smooth' }) }
+  })
+
+  let touchStartY = 0
+  document.addEventListener('touchstart', e => { touchStartY = e.touches[0].clientY }, { passive: true })
+  document.addEventListener('touchend', e => {
+    const diff = touchStartY - e.changedTouches[0].clientY
+    const current = Math.round(window.scrollY / window.innerHeight)
+    if (Math.abs(diff) > 50) {
+      if (diff > 0 && current < slides.length - 1) slides[current + 1].scrollIntoView({ behavior: 'smooth' })
+      if (diff < 0 && current > 0) slides[current - 1].scrollIntoView({ behavior: 'smooth' })
+    }
+  })
+</script>
+</body>
+</html>
