@@ -286,7 +286,7 @@ export function UserSettingsPage() {
             <UserIcon className="w-4 h-4" style={{ color: PRIMARY }} />
             <h2 className="text-sm font-semibold text-foreground">Profil Bilgileri</h2>
           </div>
-          <div className="grid grid-cols-2 gap-3 text-sm mb-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm mb-4">
             <div className="space-y-0.5">
               <p className="text-xs text-muted-foreground">Ad Soyad</p>
               <p className="font-medium text-foreground">{user?.fullName ?? '—'}</p>

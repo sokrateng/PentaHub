@@ -557,7 +557,7 @@ export function ProjectDetailPage() {
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1">
-          <TabsList className="flex flex-wrap h-auto bg-transparent border-b border-border rounded-none p-0 gap-0 w-full">
+          <TabsList className="flex overflow-x-auto h-auto bg-transparent border-b border-border rounded-none p-0 gap-0 w-full scrollbar-hide">
             {tabItems.map((tab) => (
               <TabsTrigger
                 key={tab}
@@ -580,7 +580,7 @@ export function ProjectDetailPage() {
           {/* Ayarlar tab */}
           <TabsContent value="Ayarlar" className="mt-5">
             <div className="bg-white rounded-xl border border-border p-6 space-y-5">
-              <div className="grid grid-cols-2 gap-5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                 {/* Project name */}
                 <div className="space-y-1.5">
                   <label className="text-sm font-medium text-foreground">Proje Adı</label>
@@ -950,7 +950,7 @@ export function ProjectDetailPage() {
                   <ClipboardList className="w-4 h-4" style={{ color: 'hsl(153 60% 33%)' }} />
                   <h3 className="text-sm font-semibold text-foreground">Proje Özeti</h3>
                 </div>
-                <div className="grid grid-cols-2 gap-4 text-sm">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
                   <div className="space-y-1">
                     <span className="text-muted-foreground text-xs font-medium uppercase tracking-wide">Proje Adı</span>
                     <p className="font-medium">{project.name}</p>
@@ -1126,7 +1126,7 @@ export function ProjectDetailPage() {
               </div>
 
               {/* Risk Kategorileri */}
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {riskCategories.map((category) => {
                   const colors = severityColor(category.severity);
                   return (
@@ -1252,7 +1252,7 @@ export function ProjectDetailPage() {
                         <BookOpen className="w-4 h-4" style={{ color: 'hsl(213 94% 48%)' }} />
                         <h4 className="text-sm font-semibold">Yeni Döküman</h4>
                       </div>
-                      <div className="grid grid-cols-2 gap-3">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div className="space-y-1.5">
                           <label className="text-xs font-medium text-foreground">Döküman Adı</label>
                           <Input

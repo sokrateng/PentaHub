@@ -306,7 +306,7 @@ export function ContactDetailPage() {
                   <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
                     Firma Bilgileri
                   </h3>
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div className="col-span-2">
                       <FormField
                         id="companyName"
@@ -355,7 +355,7 @@ export function ContactDetailPage() {
                   <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
                     İletişim Kişisi
                   </h3>
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div className="col-span-2">
                       <FormField
                         id="contactPersonName"

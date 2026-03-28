@@ -171,3 +171,12 @@ body {
     @apply font-sans;
   }
 }
+
+/* Scrollbar gizleme utility */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}

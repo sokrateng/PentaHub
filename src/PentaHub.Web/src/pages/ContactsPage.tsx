@@ -411,7 +411,7 @@ export function ContactsPage() {
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label htmlFor="contactPersonName" className="text-xs font-medium">İletişim Kişisi</Label>
                 <Input
@@ -435,7 +435,7 @@ export function ContactsPage() {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label htmlFor="phone" className="text-xs font-medium">Telefon</Label>
                 <Input
@@ -480,7 +480,7 @@ export function ContactsPage() {
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label htmlFor="city" className="text-xs font-medium">Şehir</Label>
                 <Input

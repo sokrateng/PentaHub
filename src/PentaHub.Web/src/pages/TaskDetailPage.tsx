@@ -177,9 +177,9 @@ export function TaskDetailPage() {
   };
 
   return (
-    <div className="flex gap-0 h-full">
+    <div className="flex flex-col md:flex-row gap-0 h-full">
       {/* Main content */}
-      <div className="flex-1 min-w-0 flex flex-col gap-4 pr-5">
+      <div className="flex-1 min-w-0 flex flex-col gap-4 md:pr-5">
         {/* Breadcrumb */}
         <div className="flex items-center gap-2 text-sm">
           <Link
@@ -245,7 +245,7 @@ export function TaskDetailPage() {
 
         {/* Form fields */}
         <div className="bg-white rounded-xl border border-border p-5 space-y-4">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {/* Project (read-only) */}
             <div className="space-y-1.5">
               <label className="text-sm font-medium text-foreground">Proje</label>
@@ -323,7 +323,7 @@ export function TaskDetailPage() {
           </div>
 
           {/* Remaining hours */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
               <label className="text-sm font-medium text-foreground">Kalan Saat</label>
               <div className="h-9 flex items-center px-3 rounded-md border border-border bg-muted/40 text-sm text-muted-foreground">
