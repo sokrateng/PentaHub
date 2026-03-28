@@ -140,7 +140,7 @@ export function CollaborationPanel({ entityType, entityId }: CollaborationPanelP
 
   return (
     <div
-      className="w-[340px] flex-shrink-0 bg-white border-l border-border flex flex-col -mr-6 -mt-5 -mb-6"
+      className="w-full md:w-[340px] md:flex-shrink-0 bg-white border-l border-border flex flex-col -mr-6 -mt-5 -mb-6"
       style={{ marginRight: '-1.5rem', marginTop: '-1.25rem', marginBottom: '-1.5rem' }}
     >
       {/* Panel header */}

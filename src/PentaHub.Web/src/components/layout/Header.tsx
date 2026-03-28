@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
-import { Bell, Search, ChevronRight, X } from 'lucide-react';
+import { Bell, Search, ChevronRight, X, Menu } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import {
   DropdownMenu,
@@ -11,6 +11,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useAuthStore } from '@/stores/authStore';
+import { useSidebarStore } from '@/stores/sidebarStore';
 
 const routeTitles: Record<string, string> = {
   '/dashboard': 'Dashboard',
@@ -47,6 +48,7 @@ export function Header() {
   const [searchParams] = useSearchParams();
   const breadcrumb = getBreadcrumb(location.pathname);
   const { user, logout } = useAuthStore();
+  const { toggle } = useSidebarStore();
 
   const [query, setQuery] = useState(searchParams.get('search') ?? '');
 
@@ -80,6 +82,15 @@ export function Header() {
 
   return (
     <header className="h-14 bg-white border-b border-border flex items-center px-6 gap-4 sticky top-0 z-40">
+      {/* Hamburger button — mobile only */}
+      <button
+        className="md:hidden w-8 h-8 rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring flex-shrink-0"
+        onClick={toggle}
+        aria-label="Menüyü aç/kapat"
+      >
+        <Menu className="w-4 h-4" />
+      </button>
+
       {/* Breadcrumb / Title */}
       <div className="flex items-center gap-2 flex-1 min-w-0">
         {breadcrumb.parent ? (
@@ -96,14 +107,14 @@ export function Header() {
       {/* Right side controls */}
       <div className="flex items-center gap-2 flex-shrink-0">
         {/* Search */}
-        <div className="relative">
+        <div className="relative hidden sm:block">
           <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
           <Input
             placeholder="Ara..."
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={handleKeyDown}
-            className="pl-8 pr-7 h-8 w-48 text-sm bg-muted/50 border-border/60 focus-visible:ring-primary/30"
+            className="pl-8 pr-7 h-8 w-32 sm:w-48 text-sm bg-muted/50 border-border/60 focus-visible:ring-primary/30"
           />
           {query && (
             <button

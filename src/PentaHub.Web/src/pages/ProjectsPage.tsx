@@ -159,7 +159,7 @@ function KanbanSkeleton() {
   return (
     <div className="flex gap-5 overflow-x-auto pb-4">
       {columns.map((col) => (
-        <div key={col.id} className="flex-shrink-0 w-72">
+        <div key={col.id} className="flex-shrink-0 w-72 min-w-[280px]">
           <div className="h-8 bg-muted rounded mb-3 animate-pulse" />
           <div className="space-y-2.5">
             {[1, 2, 3].map((i) => (
@@ -611,7 +611,7 @@ export function ProjectsPage() {
             {columns.map((col) => {
               const colProjects = projectsByStatus(col.id);
               return (
-                <div key={col.id} className="flex-shrink-0 w-72">
+                <div key={col.id} className="flex-shrink-0 w-72 min-w-[280px]">
                   {/* Column header */}
                   <div className="flex items-center gap-2 mb-3 px-1">
                     <span

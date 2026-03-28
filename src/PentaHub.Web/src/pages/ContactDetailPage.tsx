@@ -231,7 +231,7 @@ export function ContactDetailPage() {
       </div>
 
       {/* Main layout */}
-      <div className="flex gap-5 flex-1 min-h-0">
+      <div className="flex flex-col md:flex-row gap-5 flex-1 min-h-0">
         {/* Left: form + tabs (65%) */}
         <div className="flex flex-col gap-5 flex-1 min-w-0">
           {/* Form card */}
@@ -509,7 +509,7 @@ export function ContactDetailPage() {
         </div>
 
         {/* Right: CollaborationPanel (35%) */}
-        <div className="w-[320px] flex-shrink-0 flex">
+        <div className="w-full md:w-[320px] md:flex-shrink-0 flex">
           <CollaborationPanel entityType="Contact" entityId={contactId} />
         </div>
       </div>

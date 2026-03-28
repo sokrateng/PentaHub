@@ -6,7 +6,7 @@ export function AppShell() {
   return (
     <div className="flex h-screen overflow-hidden bg-background">
       <Sidebar />
-      <div className="flex flex-col flex-1 ml-[260px] min-h-screen overflow-hidden">
+      <div className="flex flex-col flex-1 ml-0 md:ml-[260px] min-h-screen overflow-hidden">
         <Header />
         <main className="flex-1 overflow-y-auto p-6">
           <Outlet />

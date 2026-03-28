@@ -222,7 +222,7 @@ function KanbanSkeleton() {
   return (
     <div className="flex gap-5 overflow-x-auto pb-4">
       {[1, 2, 3].map((i) => (
-        <div key={i} className="flex-shrink-0 w-72">
+        <div key={i} className="flex-shrink-0 w-72 min-w-[280px]">
           <div className="h-8 bg-muted rounded mb-3 animate-pulse" />
           <div className="space-y-2.5">
             {[1, 2, 3].map((j) => (
@@ -436,7 +436,7 @@ export function TasksPage() {
             {filteredColumns.map((col, colIndex) => {
               const color = COLUMN_COLORS[colIndex % COLUMN_COLORS.length];
               return (
-                <div key={col.stageId} className="flex-shrink-0 w-72">
+                <div key={col.stageId} className="flex-shrink-0 w-72 min-w-[280px]">
                   {/* Column header */}
                   <div className="flex items-center gap-2 mb-3 px-1">
                     <span

@@ -413,7 +413,7 @@ export function ProjectDetailPage() {
   };
 
   return (
-    <div className="flex gap-0 h-full">
+    <div className="flex flex-col md:flex-row gap-0 h-full">
       {/* Main content */}
       <div className="flex-1 min-w-0 flex flex-col gap-5 pr-5">
         {/* Breadcrumb */}
@@ -455,7 +455,7 @@ export function ProjectDetailPage() {
         </div>
 
         {/* Metrics row */}
-        <div className="grid grid-cols-7 gap-2">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-2">
           {/* Belgeler */}
           <div
             className="bg-white rounded-lg border border-border p-3 flex flex-col items-center gap-1 text-center cursor-pointer hover:border-[hsl(213_94%_48%)] hover:bg-[hsl(213_94%_48%)]/5 hover:shadow-sm transition-all"
@@ -1179,7 +1179,7 @@ export function ProjectDetailPage() {
 
                 {/* Metrics summary */}
                 <Separator />
-                <div className="grid grid-cols-3 gap-3 text-center">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-center">
                   <div className="space-y-0.5">
                     <p className="text-lg font-bold text-foreground">{completionRate}%</p>
                     <p className="text-xs text-muted-foreground">Tamamlanma Oranı</p>
