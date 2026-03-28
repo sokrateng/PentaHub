@@ -142,8 +142,9 @@ export function GlobalTasksPage() {
   const allTasks: ProjectTask[] = selectedId !== null
     ? flattenColumns(tasksResponse?.data ?? [])
     : [];
+  const normalize = (s: string) => s.toLocaleLowerCase('tr-TR');
   const tasks = searchQuery
-    ? allTasks.filter((t) => t.title.toLowerCase().includes(searchQuery.toLowerCase()))
+    ? allTasks.filter((t) => normalize(t.title).includes(normalize(searchQuery)))
     : allTasks;
 
   const isLoading = isLoadingProjects || (selectedId !== null && isLoadingTasks);

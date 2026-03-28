@@ -29,7 +29,10 @@ public class GetProjectListQueryHandler : IRequestHandler<GetProjectListQuery, A
             query = query.Where(p => p.ProjectManagerId == request.ManagerId.Value);
 
         if (!string.IsNullOrWhiteSpace(request.Search))
-            query = query.Where(p => p.Name.Contains(request.Search) || (p.Description != null && p.Description.Contains(request.Search)));
+        {
+            var search = request.Search.ToLower();
+            query = query.Where(p => p.Name.ToLower().Contains(search) || (p.Description != null && p.Description.ToLower().Contains(search)));
+        }
 
         if (request.ExcludeTemplates == true)
             query = query.Where(p => !p.IsTemplate);

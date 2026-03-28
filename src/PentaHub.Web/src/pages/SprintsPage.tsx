@@ -219,8 +219,9 @@ export function SprintsPage() {
 
   const projects = projectsResponse?.data ?? [];
   const allSprints = sprintsResponse?.data ?? [];
+  const normalize = (s: string) => s.toLocaleLowerCase('tr-TR');
   const sprints = searchQuery
-    ? allSprints.filter((s) => s.name.toLowerCase().includes(searchQuery.toLowerCase()))
+    ? allSprints.filter((s) => normalize(s.name).includes(normalize(searchQuery)))
     : allSprints;
 
   const handleCreate = () => {

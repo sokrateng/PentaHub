@@ -296,8 +296,9 @@ export function BacklogPage() {
   };
 
   const allBacklogTasks = Array.isArray(backlogResponse?.data) ? backlogResponse.data : [];
+  const normalize = (s: string) => s.toLocaleLowerCase('tr-TR');
   const tasks = searchQuery
-    ? allBacklogTasks.filter((t) => t.title.toLowerCase().includes(searchQuery.toLowerCase()))
+    ? allBacklogTasks.filter((t) => normalize(t.title).includes(normalize(searchQuery)))
     : allBacklogTasks;
 
   const toggleTask = (taskId: number) => {
