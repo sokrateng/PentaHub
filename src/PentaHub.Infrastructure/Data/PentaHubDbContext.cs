@@ -53,7 +53,8 @@ public class PentaHubDbContext : DbContext, IApplicationDbContext
             new User { Id = 2, FullName = "Can Atem", Email = "can.atem@pentahub.com", PasswordHash = demoPasswordHash, Role = "ProjectManager", Department = "Satış", IsActive = true, CreatedAt = now },
             new User { Id = 3, FullName = "Osman Kaya", Email = "osman.kaya@pentahub.com", PasswordHash = demoPasswordHash, Role = "User", Department = "Yazılım", IsActive = true, CreatedAt = now },
             new User { Id = 4, FullName = "Ali Akın", Email = "ali.akin@pentahub.com", PasswordHash = demoPasswordHash, Role = "Admin", Department = "IT", IsActive = true, CreatedAt = now },
-            new User { Id = 5, FullName = "Gizem Çiğer", Email = "gizem.ciger@pentahub.com", PasswordHash = demoPasswordHash, Role = "ProjectManager", Department = "Pazarlama", IsActive = true, CreatedAt = now }
+            new User { Id = 5, FullName = "Gizem Çiğer", Email = "gizem.ciger@pentahub.com", PasswordHash = demoPasswordHash, Role = "ProjectManager", Department = "Pazarlama", IsActive = true, CreatedAt = now },
+            new User { Id = 6, FullName = "Admin User", Email = "admin@pentahub.com", PasswordHash = demoPasswordHash, Role = "Admin", Department = "IT", IsActive = true, CreatedAt = now }
         );
 
         modelBuilder.Entity<Project>().HasData(

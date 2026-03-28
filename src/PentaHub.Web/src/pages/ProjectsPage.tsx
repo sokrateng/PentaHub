@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   DragDropContext,
@@ -219,6 +219,8 @@ type PageMode = 'projects' | 'templates';
 
 export function ProjectsPage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const searchQuery = searchParams.get('search') ?? '';
   const queryClient = useQueryClient();
   const [viewMode, setViewMode] = useState<ViewMode>('kanban');
   const [pageMode, setPageMode] = useState<PageMode>('projects');
@@ -249,12 +251,13 @@ export function ProjectsPage() {
     appliedFilter.excludeTemplates;
 
   const { data: projectsResponse, isLoading } = useQuery({
-    queryKey: ['projects', appliedFilter],
+    queryKey: ['projects', appliedFilter, searchQuery],
     queryFn: () =>
       projectsApi.getAll({
         excludeTemplates: appliedFilter.excludeTemplates,
         status: appliedFilter.status !== 'all' ? Number(appliedFilter.status) : undefined,
         managerId: appliedFilter.managerId !== 'all' ? Number(appliedFilter.managerId) : undefined,
+        search: searchQuery || undefined,
       }),
   });
 

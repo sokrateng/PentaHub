@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   Plus,
@@ -182,6 +182,8 @@ function filterTabToState(tab: FilterTab): SprintState | undefined {
 
 export function SprintsPage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const searchQuery = searchParams.get('search') ?? '';
   const queryClient = useQueryClient();
   const [selectedProjectId, setSelectedProjectId] = useState<string>('all');
   const [filterTab, setFilterTab] = useState<FilterTab>('all');
@@ -216,7 +218,10 @@ export function SprintsPage() {
   });
 
   const projects = projectsResponse?.data ?? [];
-  const sprints = sprintsResponse?.data ?? [];
+  const allSprints = sprintsResponse?.data ?? [];
+  const sprints = searchQuery
+    ? allSprints.filter((s) => s.name.toLowerCase().includes(searchQuery.toLowerCase()))
+    : allSprints;
 
   const handleCreate = () => {
     if (!form.name.trim() || !form.projectId || !form.startDate || !form.endDate) return;

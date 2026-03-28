@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   Star,
@@ -221,6 +221,8 @@ const defaultTaskForm: NewTaskForm = {
 
 export function BacklogPage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const searchQuery = searchParams.get('search') ?? '';
   const queryClient = useQueryClient();
   const [selectedProjectId, setSelectedProjectId] = useState<string>('');
   const [selectedTaskIds, setSelectedTaskIds] = useState<Set<number>>(new Set());
@@ -293,7 +295,10 @@ export function BacklogPage() {
     createTaskMutation.mutate(payload);
   };
 
-  const tasks = Array.isArray(backlogResponse?.data) ? backlogResponse.data : [];
+  const allBacklogTasks = Array.isArray(backlogResponse?.data) ? backlogResponse.data : [];
+  const tasks = searchQuery
+    ? allBacklogTasks.filter((t) => t.title.toLowerCase().includes(searchQuery.toLowerCase()))
+    : allBacklogTasks;
 
   const toggleTask = (taskId: number) => {
     setSelectedTaskIds((prev) => {

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   Building2,
@@ -174,9 +174,10 @@ const EMPTY_FORM: CreateContactRequest = {
 
 export function ContactsPage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const queryClient = useQueryClient();
 
-  const [search, setSearch] = useState('');
+  const [search, setSearch] = useState(searchParams.get('search') ?? '');
   const [city, setCity] = useState('');
   const [country, setCountry] = useState('');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');

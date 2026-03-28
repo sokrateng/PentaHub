@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   Star,
@@ -84,6 +84,8 @@ const defaultTaskForm: NewTaskForm = {
 
 export function GlobalTasksPage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const searchQuery = searchParams.get('search') ?? '';
   const queryClient = useQueryClient();
   const [selectedProjectId, setSelectedProjectId] = useState<string>('all');
   const [taskDialogOpen, setTaskDialogOpen] = useState(false);
@@ -137,9 +139,12 @@ export function GlobalTasksPage() {
     createTaskMutation.mutate(payload);
   };
 
-  const tasks: ProjectTask[] = selectedId !== null
+  const allTasks: ProjectTask[] = selectedId !== null
     ? flattenColumns(tasksResponse?.data ?? [])
     : [];
+  const tasks = searchQuery
+    ? allTasks.filter((t) => t.title.toLowerCase().includes(searchQuery.toLowerCase()))
+    : allTasks;
 
   const isLoading = isLoadingProjects || (selectedId !== null && isLoadingTasks);
 

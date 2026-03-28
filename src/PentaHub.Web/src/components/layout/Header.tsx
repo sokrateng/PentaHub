@@ -1,5 +1,6 @@
-import { useLocation, useNavigate } from 'react-router-dom';
-import { Bell, Search, ChevronRight } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
+import { Bell, Search, ChevronRight, X } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import {
   DropdownMenu,
@@ -43,8 +44,31 @@ function getInitials(name: string): string {
 export function Header() {
   const location = useLocation();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const breadcrumb = getBreadcrumb(location.pathname);
   const { user, logout } = useAuthStore();
+
+  const [query, setQuery] = useState(searchParams.get('search') ?? '');
+
+  useEffect(() => {
+    setQuery(searchParams.get('search') ?? '');
+  }, [searchParams]);
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      const trimmed = query.trim();
+      if (trimmed) {
+        navigate(location.pathname + '?search=' + encodeURIComponent(trimmed));
+      } else {
+        navigate(location.pathname);
+      }
+    }
+  };
+
+  const handleClear = () => {
+    setQuery('');
+    navigate(location.pathname);
+  };
 
   const displayName = user?.fullName ?? 'Kullanıcı';
   const initials = getInitials(displayName);
@@ -76,8 +100,20 @@ export function Header() {
           <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
           <Input
             placeholder="Ara..."
-            className="pl-8 h-8 w-48 text-sm bg-muted/50 border-border/60 focus-visible:ring-primary/30"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            onKeyDown={handleKeyDown}
+            className="pl-8 pr-7 h-8 w-48 text-sm bg-muted/50 border-border/60 focus-visible:ring-primary/30"
           />
+          {query && (
+            <button
+              onClick={handleClear}
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              aria-label="Aramayı temizle"
+            >
+              <X className="w-3 h-3" />
+            </button>
+          )}
         </div>
 
         {/* Notification bell */}
