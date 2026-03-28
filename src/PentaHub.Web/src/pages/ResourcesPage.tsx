@@ -497,9 +497,9 @@ export function ResourcesPage() {
                             className="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-semibold flex-shrink-0"
                             style={{ backgroundColor: PRIMARY }}
                           >
-                            {r.userName.charAt(0).toUpperCase()}
+                            {r.userFullName.charAt(0).toUpperCase()}
                           </div>
-                          <span className="font-medium text-foreground">{r.userName}</span>
+                          <span className="font-medium text-foreground">{r.userFullName}</span>
                         </div>
                       </td>
                       <td className="px-4 py-3 text-muted-foreground">{formatDate(r.startDate)}</td>

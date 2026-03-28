@@ -226,7 +226,8 @@ export interface GanttTask {
 export interface ResourceAllocation {
   id: number;
   userId: number;
-  userName: string;
+  userFullName: string;
+  userAvatarUrl?: string;
   projectId: number;
   projectName: string;
   taskId?: number;
@@ -236,6 +237,7 @@ export interface ResourceAllocation {
   hoursPerDay: number;
   totalHours: number;
   notes?: string;
+  createdAt: string;
 }
 
 export interface CreateResourceAllocationRequest {
