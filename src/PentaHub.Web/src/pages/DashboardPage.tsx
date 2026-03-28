@@ -50,7 +50,7 @@ function KpiCard({
 }: {
   label: string;
   value: number | string;
-  icon: React.ComponentType<{ className?: string }>;
+  icon: React.ComponentType<{ className?: string; style?: React.CSSProperties }>;
   color: string;
   isLoading?: boolean;
 }) {
@@ -231,7 +231,7 @@ export function DashboardPage() {
                   ))}
                 </Pie>
                 <Tooltip
-                  formatter={(value: number) => [`${value} proje`, '']}
+                  formatter={(value: unknown) => [`${value} proje`, '']}
                   contentStyle={{ fontSize: 12, borderRadius: 8, border: '1px solid hsl(214.3 31.8% 91.4%)' }}
                 />
                 <Legend
@@ -266,7 +266,7 @@ export function DashboardPage() {
                 />
                 <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
                 <Tooltip
-                  formatter={(value: number) => [`${value} proje`, 'Proje']}
+                  formatter={(value: unknown) => [`${value} proje`, 'Proje']}
                   contentStyle={{ fontSize: 12, borderRadius: 8, border: '1px solid hsl(214.3 31.8% 91.4%)' }}
                 />
                 <Bar dataKey="count" fill={GREEN} radius={[4, 4, 0, 0]} />
@@ -297,7 +297,7 @@ export function DashboardPage() {
                 />
                 <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
                 <Tooltip
-                  formatter={(value: number) => [`${value} proje`, 'Proje']}
+                  formatter={(value: unknown) => [`${value} proje`, 'Proje']}
                   contentStyle={{ fontSize: 12, borderRadius: 8, border: '1px solid hsl(214.3 31.8% 91.4%)' }}
                 />
                 <Bar dataKey="count" fill={PURPLE} radius={[4, 4, 0, 0]} />
@@ -331,7 +331,7 @@ export function DashboardPage() {
                   ))}
                 </Pie>
                 <Tooltip
-                  formatter={(value: number) => [`${value} sprint`, '']}
+                  formatter={(value: unknown) => [`${value} sprint`, '']}
                   contentStyle={{ fontSize: 12, borderRadius: 8, border: '1px solid hsl(214.3 31.8% 91.4%)' }}
                 />
                 <Legend

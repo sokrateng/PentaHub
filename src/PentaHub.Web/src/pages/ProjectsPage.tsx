@@ -448,7 +448,7 @@ export function ProjectsPage() {
                   <label className="text-xs font-medium text-muted-foreground">Durum</label>
                   <Select
                     value={pendingFilter.status}
-                    onValueChange={(v) => setPendingFilter((prev) => ({ ...prev, status: v }))}
+                    onValueChange={(v) => setPendingFilter((prev) => ({ ...prev, status: v ?? '' }))}
                   >
                     <SelectTrigger className="h-8 text-xs">
                       <SelectValue>
@@ -477,7 +477,7 @@ export function ProjectsPage() {
                   <label className="text-xs font-medium text-muted-foreground">Proje Yöneticisi</label>
                   <Select
                     value={pendingFilter.managerId}
-                    onValueChange={(v) => setPendingFilter((prev) => ({ ...prev, managerId: v }))}
+                    onValueChange={(v) => setPendingFilter((prev) => ({ ...prev, managerId: v ?? '' }))}
                   >
                     <SelectTrigger className="h-8 text-xs">
                       <SelectValue>
@@ -756,7 +756,7 @@ export function ProjectsPage() {
             {templateProjects.length > 0 && (
               <div className="space-y-1.5">
                 <label className="text-sm font-medium text-foreground">Şablondan Oluştur</label>
-                <Select value={selectedTemplateId} onValueChange={handleSelectTemplate}>
+                <Select value={selectedTemplateId} onValueChange={(v) => handleSelectTemplate(v ?? '')}>
                   <SelectTrigger>
                     <SelectValue placeholder="Şablon seçin (opsiyonel)...">
                       {selectedTemplateId
@@ -812,7 +812,7 @@ export function ProjectsPage() {
               <label className="text-sm font-medium text-foreground">Proje Yöneticisi</label>
               <Select
                 value={form.projectManagerId}
-                onValueChange={(value) => setForm((prev) => ({ ...prev, projectManagerId: value }))}
+                onValueChange={(value) => setForm((prev) => ({ ...prev, projectManagerId: value ?? '' }))}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Yönetici seçin...">
@@ -839,7 +839,7 @@ export function ProjectsPage() {
               <label className="text-sm font-medium text-foreground">Departman</label>
               <Select
                 value={form.departmentName}
-                onValueChange={(value) => setForm((prev) => ({ ...prev, departmentName: value }))}
+                onValueChange={(value) => setForm((prev) => ({ ...prev, departmentName: value ?? '' }))}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Departman seçin..." />
@@ -859,7 +859,7 @@ export function ProjectsPage() {
               <label className="text-sm font-medium text-foreground">Durum</label>
               <Select
                 value={form.status}
-                onValueChange={(value) => setForm((prev) => ({ ...prev, status: value }))}
+                onValueChange={(value) => setForm((prev) => ({ ...prev, status: value ?? '' }))}
               >
                 <SelectTrigger>
                   <SelectValue>

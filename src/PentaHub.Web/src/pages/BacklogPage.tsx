@@ -126,7 +126,7 @@ function AssignToSprintDialog({
 
           <div className="space-y-1.5">
             <label className="text-sm font-medium text-foreground">Sprint</label>
-            <Select value={selectedSprintId} onValueChange={setSelectedSprintId}>
+            <Select value={selectedSprintId} onValueChange={(v) => setSelectedSprintId(v ?? '')}>
               <SelectTrigger>
                 <SelectValue placeholder="Sprint seçin...">
                   {selectedSprintId
@@ -331,7 +331,7 @@ export function BacklogPage() {
         <h1 className="text-xl font-bold text-foreground">Backlog</h1>
         <div className="flex items-center gap-2">
           {/* Project selector */}
-          <Select value={selectedProjectId} onValueChange={(v) => { setSelectedProjectId(v); setSelectedTaskIds(new Set()); }}>
+          <Select value={selectedProjectId} onValueChange={(v) => { setSelectedProjectId(v ?? ''); setSelectedTaskIds(new Set()); }}>
             <SelectTrigger className="h-8 w-[220px] text-xs">
               <SelectValue placeholder="Proje seçin...">
                 {selectedProjectId
@@ -525,7 +525,7 @@ export function BacklogPage() {
               <label className="text-sm font-medium text-foreground">Atanan Kişi</label>
               <Select
                 value={taskForm.assigneeId}
-                onValueChange={(v) => setTaskForm((prev) => ({ ...prev, assigneeId: v }))}
+                onValueChange={(v) => setTaskForm((prev) => ({ ...prev, assigneeId: v ?? '' }))}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Kişi seçin...">
@@ -548,7 +548,7 @@ export function BacklogPage() {
               <label className="text-sm font-medium text-foreground">Öncelik</label>
               <Select
                 value={taskForm.priority}
-                onValueChange={(v) => setTaskForm((prev) => ({ ...prev, priority: v }))}
+                onValueChange={(v) => setTaskForm((prev) => ({ ...prev, priority: v ?? '' }))}
               >
                 <SelectTrigger>
                   <SelectValue>

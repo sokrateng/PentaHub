@@ -112,7 +112,7 @@ function AddTasksDialog({
   open,
   onOpenChange,
   projectId,
-  sprintId,
+  sprintId: _sprintId,
   currentTaskIds,
   onAssign,
   isAssigning,

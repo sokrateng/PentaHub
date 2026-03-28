@@ -259,7 +259,7 @@ export function TaskDetailPage() {
               <label className="text-sm font-medium text-foreground">Atanan Kişi</label>
               <Select
                 value={currentAssigneeId}
-                onValueChange={(v) => setFormData((prev) => ({ ...prev, assigneeId: v }))}
+                onValueChange={(v) => setFormData((prev) => ({ ...prev, assigneeId: v ?? undefined }))}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Kişi seçin...">

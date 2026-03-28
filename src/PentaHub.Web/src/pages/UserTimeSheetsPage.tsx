@@ -178,7 +178,7 @@ export function UserTimeSheetsPage() {
           {/* User selector */}
           <div className="flex-1 min-w-[200px] space-y-1.5">
             <label className="text-sm font-medium">Kullanıcı</label>
-            <Select value={selectedUserId} onValueChange={setSelectedUserId}>
+            <Select value={selectedUserId} onValueChange={(v) => setSelectedUserId(v ?? '')}>
               <SelectTrigger>
                 <SelectValue placeholder="Kullanıcı seçin...">
                   {selectedUserId === 'all'

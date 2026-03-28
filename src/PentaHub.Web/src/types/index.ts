@@ -51,6 +51,7 @@ export interface ProjectListItem {
   startDate?: string;
   endDate?: string;
   taskCount: number;
+  contactId?: number;
 }
 
 export interface ProjectStats {

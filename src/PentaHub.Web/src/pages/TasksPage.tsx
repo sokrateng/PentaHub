@@ -290,9 +290,9 @@ export function TasksPage() {
         isBillable: false,
         plannedHours: 0,
       };
-      return tasksApi.create(projectId, task).then((result) => {
+      return tasksApi.create(projectId, task).then(async (result) => {
         if (result.data) {
-          return tasksApi.moveStage(result.data.id, stageId);
+          await tasksApi.moveStage(result.data.id, stageId);
         }
         return result;
       });
@@ -366,7 +366,7 @@ export function TasksPage() {
 
         <div className="flex items-center gap-2">
           {/* Assignee filter */}
-          <Select value={filterAssignee} onValueChange={setFilterAssignee}>
+          <Select value={filterAssignee} onValueChange={(v) => setFilterAssignee(v ?? '')}>
             <SelectTrigger className="h-8 w-[150px] text-xs">
               <UserIcon className="w-3.5 h-3.5 mr-1 text-muted-foreground" />
               <SelectValue placeholder="Atanan">
@@ -386,7 +386,7 @@ export function TasksPage() {
           </Select>
 
           {/* Priority filter */}
-          <Select value={filterPriority} onValueChange={setFilterPriority}>
+          <Select value={filterPriority} onValueChange={(v) => setFilterPriority(v ?? '')}>
             <SelectTrigger className="h-8 w-[130px] text-xs">
               <Filter className="w-3.5 h-3.5 mr-1 text-muted-foreground" />
               <SelectValue placeholder="Öncelik">
@@ -545,7 +545,7 @@ export function TasksPage() {
               <label className="text-sm font-medium text-foreground">Atanan Kişi</label>
               <Select
                 value={form.assigneeId}
-                onValueChange={(value) => setForm((prev) => ({ ...prev, assigneeId: value }))}
+                onValueChange={(value) => setForm((prev) => ({ ...prev, assigneeId: value ?? '' }))}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Kişi seçin...">
@@ -572,7 +572,7 @@ export function TasksPage() {
               <label className="text-sm font-medium text-foreground">Öncelik</label>
               <Select
                 value={form.priority}
-                onValueChange={(value) => setForm((prev) => ({ ...prev, priority: value }))}
+                onValueChange={(value) => setForm((prev) => ({ ...prev, priority: value ?? '' }))}
               >
                 <SelectTrigger>
                   <SelectValue>

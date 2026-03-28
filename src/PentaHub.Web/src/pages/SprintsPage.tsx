@@ -165,7 +165,6 @@ function makeDefaultForm(): NewSprintForm {
   };
 }
 
-const defaultForm: NewSprintForm = makeDefaultForm();
 
 const FILTER_TABS: { key: FilterTab; label: string; icon: React.ReactNode }[] = [
   { key: 'all', label: 'Tümü', icon: <FileText className="w-3.5 h-3.5" /> },
@@ -249,7 +248,7 @@ export function SprintsPage() {
         <h1 className="text-xl font-bold text-foreground">Sprintler</h1>
         <div className="flex items-center gap-2">
           {/* Project filter */}
-          <Select value={selectedProjectId} onValueChange={setSelectedProjectId}>
+          <Select value={selectedProjectId} onValueChange={(v) => setSelectedProjectId(v ?? '')}>
             <SelectTrigger className="h-8 w-[200px] text-xs">
               <SelectValue placeholder="Tüm Projeler">
                 {selectedProjectId === 'all'
@@ -359,7 +358,7 @@ export function SprintsPage() {
               </label>
               <Select
                 value={form.projectId}
-                onValueChange={(value) => setForm((prev) => ({ ...prev, projectId: value }))}
+                onValueChange={(value) => setForm((prev) => ({ ...prev, projectId: value ?? '' }))}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Proje seçin...">

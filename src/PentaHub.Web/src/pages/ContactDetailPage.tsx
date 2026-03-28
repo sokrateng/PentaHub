@@ -257,7 +257,7 @@ export function ContactDetailPage() {
                 </div>
                 <div className="flex items-center gap-2">
                   <AlertDialog>
-                    <AlertDialogTrigger asChild>
+                    <AlertDialogTrigger>
                       <Button
                         type="button"
                         variant="ghost"

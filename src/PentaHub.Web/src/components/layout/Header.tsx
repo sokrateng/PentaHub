@@ -90,7 +90,7 @@ export function Header() {
 
         {/* User avatar dropdown */}
         <DropdownMenu>
-          <DropdownMenuTrigger asChild>
+          <DropdownMenuTrigger>
             <button
               className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
               style={{ backgroundColor: 'hsl(153 60% 33%)' }}

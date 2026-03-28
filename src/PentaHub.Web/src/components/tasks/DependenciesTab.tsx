@@ -183,7 +183,7 @@ export function DependenciesTab({ taskId, projectId }: DependenciesTabProps) {
           <div className="space-y-4 py-2">
             <div className="space-y-1.5">
               <label className="text-sm font-medium text-foreground">Görev</label>
-              <Select value={selectedTaskId} onValueChange={setSelectedTaskId}>
+              <Select value={selectedTaskId} onValueChange={(v) => setSelectedTaskId(v ?? '')}>
                 <SelectTrigger>
                   <SelectValue placeholder="Görev seçin..." />
                 </SelectTrigger>
@@ -208,7 +208,7 @@ export function DependenciesTab({ taskId, projectId }: DependenciesTabProps) {
 
             <div className="space-y-1.5">
               <label className="text-sm font-medium text-foreground">Bağımlılık Tipi</label>
-              <Select value={selectedType} onValueChange={setSelectedType}>
+              <Select value={selectedType} onValueChange={(v) => setSelectedType(v ?? '')}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>

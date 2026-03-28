@@ -151,7 +151,7 @@ export function GlobalTasksPage() {
 
         {/* Project filter + new task button */}
         <div className="flex items-center gap-2">
-          <Select value={selectedProjectId} onValueChange={setSelectedProjectId}>
+          <Select value={selectedProjectId} onValueChange={(v) => setSelectedProjectId(v ?? '')}>
             <SelectTrigger className="h-8 w-[220px] text-xs">
               <SelectValue placeholder="Proje seçin...">
                 {selectedProjectId === 'all'
@@ -335,7 +335,7 @@ export function GlobalTasksPage() {
               <label className="text-sm font-medium text-foreground">Atanan Kişi</label>
               <Select
                 value={taskForm.assigneeId}
-                onValueChange={(v) => setTaskForm((prev) => ({ ...prev, assigneeId: v }))}
+                onValueChange={(v) => setTaskForm((prev) => ({ ...prev, assigneeId: v ?? '' }))}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Kişi seçin...">
@@ -358,7 +358,7 @@ export function GlobalTasksPage() {
               <label className="text-sm font-medium text-foreground">Öncelik</label>
               <Select
                 value={taskForm.priority}
-                onValueChange={(v) => setTaskForm((prev) => ({ ...prev, priority: v }))}
+                onValueChange={(v) => setTaskForm((prev) => ({ ...prev, priority: v ?? '' }))}
               >
                 <SelectTrigger>
                   <SelectValue>

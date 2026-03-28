@@ -1,5 +1,4 @@
-import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { useState } from 'react';
 import { Settings, User as UserIcon, Lock, Info, Users, Plus, Building2, Brain, Trash2, CheckCircle2, Eye, EyeOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -324,7 +323,7 @@ export function UserSettingsPage() {
             <label className="text-sm font-medium text-foreground">Departman</label>
             <Select
               value={profileForm.department}
-              onValueChange={(v) => setProfileForm((prev) => ({ ...prev, department: v }))}
+              onValueChange={(v) => setProfileForm((prev) => ({ ...prev, department: v ?? '' }))}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Departman seçin..." />
@@ -469,8 +468,8 @@ export function UserSettingsPage() {
               onValueChange={(v) =>
                 setAiSettings((prev) => ({
                   ...prev,
-                  provider: v,
-                  model: AI_PROVIDER_MODELS[v]?.[0] ?? '',
+                  provider: v ?? '',
+                  model: AI_PROVIDER_MODELS[v ?? '']?.[0] ?? '',
                 }))
               }
             >
@@ -499,7 +498,7 @@ export function UserSettingsPage() {
             ) : (
               <Select
                 value={aiSettings.model}
-                onValueChange={(v) => setAiSettings((prev) => ({ ...prev, model: v }))}
+                onValueChange={(v) => setAiSettings((prev) => ({ ...prev, model: v ?? '' }))}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Model seçin..." />
@@ -758,7 +757,7 @@ export function UserSettingsPage() {
               <label className="text-sm font-medium text-foreground">Departman</label>
               <Select
                 value={newUserForm.department}
-                onValueChange={(v) => setNewUserForm((prev) => ({ ...prev, department: v }))}
+                onValueChange={(v) => setNewUserForm((prev) => ({ ...prev, department: v ?? '' }))}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Departman seçin...">

@@ -140,7 +140,7 @@ function AddResourceDialog({ open, onClose, preselectedProjectId }: AddResourceD
           {/* User */}
           <div className="space-y-1.5">
             <label className="text-sm font-medium">Kullanıcı *</label>
-            <Select value={form.userId} onValueChange={(v) => setForm((p) => ({ ...p, userId: v }))}>
+            <Select value={form.userId} onValueChange={(v) => setForm((p) => ({ ...p, userId: v ?? '' }))}>
               <SelectTrigger>
                 <SelectValue placeholder="Kullanıcı seçin...">
                   {form.userId
@@ -164,7 +164,7 @@ function AddResourceDialog({ open, onClose, preselectedProjectId }: AddResourceD
             <Select
               value={form.projectId}
               onValueChange={(v) =>
-                setForm((p) => ({ ...p, projectId: v, taskId: '' }))
+                setForm((p) => ({ ...p, projectId: v ?? '', taskId: '' }))
               }
             >
               <SelectTrigger>
@@ -189,7 +189,7 @@ function AddResourceDialog({ open, onClose, preselectedProjectId }: AddResourceD
             <label className="text-sm font-medium">Görev (isteğe bağlı)</label>
             <Select
               value={form.taskId}
-              onValueChange={(v) => setForm((p) => ({ ...p, taskId: v }))}
+              onValueChange={(v) => setForm((p) => ({ ...p, taskId: v ?? '' }))}
               disabled={!form.projectId}
             >
               <SelectTrigger>
@@ -361,7 +361,7 @@ export function ResourcesPage() {
       <div className="bg-white rounded-xl border border-border p-4">
         <div className="flex items-center gap-3">
           <label className="text-sm font-medium text-foreground flex-shrink-0">Proje Seçin:</label>
-          <Select value={selectedProjectId} onValueChange={setSelectedProjectId}>
+          <Select value={selectedProjectId} onValueChange={(v) => setSelectedProjectId(v ?? '')}>
             <SelectTrigger className="max-w-xs">
               <SelectValue placeholder="Proje seçin...">
                 {selectedProjectId

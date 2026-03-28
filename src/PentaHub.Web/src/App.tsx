@@ -18,7 +18,6 @@ import { ContactsPage } from '@/pages/ContactsPage';
 import { ContactDetailPage } from '@/pages/ContactDetailPage';
 import { LoginPage } from '@/pages/LoginPage';
 import { RegisterPage } from '@/pages/RegisterPage';
-import { PlaceholderPage } from '@/pages/PlaceholderPage';
 import { GlobalTasksPage } from '@/pages/GlobalTasksPage';
 import { UserSettingsPage } from '@/pages/UserSettingsPage';
 import { useAuthStore } from '@/stores/authStore';
@@ -74,7 +73,7 @@ function AppWithAuth() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
+      <BrowserRouter basename="/PentaHub">
         <AppWithAuth />
       </BrowserRouter>
     </QueryClientProvider>

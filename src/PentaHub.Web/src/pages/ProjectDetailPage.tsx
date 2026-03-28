@@ -21,7 +21,6 @@ import {
   Minus,
   ClipboardList,
   Info,
-  Plus,
   Trash2,
   StickyNote,
   Link as LinkIcon,
@@ -1267,7 +1266,7 @@ export function ProjectDetailPage() {
                           <label className="text-xs font-medium text-foreground">Döküman Türü</label>
                           <Select
                             value={docForm.type}
-                            onValueChange={(v) => setDocForm((p) => ({ ...p, type: v }))}
+                            onValueChange={(v) => setDocForm((p) => ({ ...p, type: v ?? '' }))}
                           >
                             <SelectTrigger>
                               <SelectValue placeholder="Tür seçin..." />
@@ -1424,7 +1423,6 @@ export function ProjectDetailPage() {
                       <div className="divide-y divide-border">
                         {filteredComments.map((comment) => {
                           const isDoc = comment.commentType === CommentType.Note && comment.content.startsWith('📄 **');
-                          const isEmail = comment.commentType === CommentType.Email;
                           // Parse doc content
                           let docName = '';
                           let docType = '';
