@@ -4,7 +4,9 @@
 
 PentaHub, proje yonetimi odakli, modern bir is yonetim platformudur. Clean Architecture ve CQRS pattern ile gelistirilmis .NET 9 backend, React 19 + TypeScript frontend ile tam kapsamli bir SPA sunmaktadir.
 
-> **Canli Demo:** [sokrateng.github.io/PentaHub](https://sokrateng.github.io/PentaHub/)
+> **Canli Demo:** [pentahub.vercel.app](https://pentahub.vercel.app) | **API:** [pentahub-api.onrender.com](https://pentahub-api.onrender.com) | **Statik:** [sokrateng.github.io/PentaHub](https://sokrateng.github.io/PentaHub/)
+>
+> **Demo Giris:** `admin@pentahub.com` / `demo123`
 
 ---
 
@@ -204,6 +206,37 @@ Cikti `dist/` klasorune olusturulur.
 | Faz 3C | Kontak/Firma Yonetimi | ✅ Tamamlandi |
 | Faz 4 | Authentication (JWT), RBAC | ✅ Tamamlandi |
 | Faz 5+ | Sales Cloud, Helpdesk, Invoice | 📋 Planlanıyor |
+
+---
+
+## Demo Verisi
+
+Platform, gercekci bir demo deneyimi icin **Penta BMS - Butce Yonetim Sistemi** projesi dahil 9 ornek proje ile gelir:
+
+- **25 gorev** (BMS-001 ~ BMS-025) fazlara dagilmis, gercekci ilerleme yuzdeleri
+- **4 sprint** (Hazirlik, Faz 1/2/3) farkli durumlarda (Done, InProgress, Draft)
+- **5 kilometre tasi**, **6 gorev bagimliligi**, **18 checklist ogesi**
+- **5 kaynak tahsisi**, **15 zaman kaydi**, **12 kolaborasyon notu** (toplanti, dokuman, hand-over, e-posta)
+
+### Demo Kullanicilar
+
+| E-posta | Sifre | Rol |
+|---------|-------|-----|
+| `admin@pentahub.com` | `demo123` | Admin |
+| `demo@pentahub.com` | `demo123` | User |
+| `yasemin.kaya@pentahub.com` | `demo123` | ProjectManager (BMS PM) |
+
+---
+
+## Deploy
+
+| Platform | URL | Amac |
+|----------|-----|------|
+| **Vercel** | [pentahub.vercel.app](https://pentahub.vercel.app) | Frontend (React SPA) |
+| **Render** | [pentahub-api.onrender.com](https://pentahub-api.onrender.com) | Backend API (.NET 9) |
+| **GitHub Pages** | [sokrateng.github.io/PentaHub](https://sokrateng.github.io/PentaHub/) | Statik demo |
+
+> **Not:** Render free tier'da 15 dk inaktivite sonrasi servis uyku moduna girer. Ilk istekte ~30-60 sn bekleyebilirsiniz.
 
 ---
 
