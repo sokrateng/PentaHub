@@ -1,6 +1,32 @@
 import { create } from 'zustand';
+import axios from 'axios';
 import { authApi } from '@/services/api';
 import type { User } from '@/types';
+
+function getErrorMessage(err: unknown, fallback: string): string {
+  if (axios.isAxiosError(err)) {
+    const status = err.response?.status;
+    const serverMessage = err.response?.data?.error;
+
+    if (!err.response || err.code === 'ERR_NETWORK') {
+      return 'Sunucuya bağlanılamıyor. Lütfen internet bağlantınızı kontrol edin veya birkaç dakika sonra tekrar deneyin.';
+    }
+    if (status === 404) {
+      return serverMessage || 'E-posta adresi veya şifre hatalı.';
+    }
+    if (status === 400) {
+      return serverMessage || 'Girilen bilgiler geçersiz. Lütfen kontrol edip tekrar deneyin.';
+    }
+    if (status === 401) {
+      return 'E-posta adresi veya şifre hatalı.';
+    }
+    if (status && status >= 500) {
+      return 'Sunucuda bir sorun oluştu. Lütfen birkaç dakika sonra tekrar deneyin.';
+    }
+    return serverMessage || fallback;
+  }
+  return fallback;
+}
 
 interface AuthState {
   user: User | null;
@@ -54,9 +80,7 @@ export const useAuthStore = create<AuthStore>((set) => ({
         set({ isLoading: false, error: response.error ?? 'Giriş başarısız' });
       }
     } catch (err: unknown) {
-      const message =
-        err instanceof Error ? err.message : 'Giriş yapılırken bir hata oluştu';
-      set({ isLoading: false, error: message });
+      set({ isLoading: false, error: getErrorMessage(err, 'Giriş yapılırken bir hata oluştu.') });
       throw err;
     }
   },
@@ -71,12 +95,10 @@ export const useAuthStore = create<AuthStore>((set) => ({
         localStorage.setItem('auth_user', JSON.stringify(user));
         set({ user, token, isAuthenticated: true, isLoading: false, error: null });
       } else {
-        set({ isLoading: false, error: response.error ?? 'Kayıt başarısız' });
+        set({ isLoading: false, error: response.error ?? 'Kayıt başarısız.' });
       }
     } catch (err: unknown) {
-      const message =
-        err instanceof Error ? err.message : 'Kayıt olurken bir hata oluştu';
-      set({ isLoading: false, error: message });
+      set({ isLoading: false, error: getErrorMessage(err, 'Kayıt olurken bir hata oluştu.') });
       throw err;
     }
   },
