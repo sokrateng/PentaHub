@@ -1,0 +1,26 @@
+services:
+  - type: web
+    name: pentahub-api
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    region: frankfurt
+    plan: free
+    envVars:
+      - key: ASPNETCORE_ENVIRONMENT
+        value: Production
+      - key: ASPNETCORE_URLS
+        value: http://+:8080
+      - key: AllowedOrigins__0
+        value: https://pentahub.vercel.app
+      - key: AllowedOrigins__1
+        value: https://sokrateng.github.io
+      - key: AllowedOrigins__2
+        value: http://localhost:5180
+      - key: JwtSettings__Secret
+        generateValue: true
+      - key: JwtSettings__Issuer
+        value: PentaHub
+      - key: JwtSettings__Audience
+        value: PentaHub-Web
+      - key: JwtSettings__ExpiryMinutes
+        value: "60"
