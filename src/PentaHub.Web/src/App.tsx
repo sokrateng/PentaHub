@@ -73,7 +73,7 @@ function AppWithAuth() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <BrowserRouter basename="/PentaHub">
+      <BrowserRouter basename={import.meta.env.VITE_BASE_PATH || '/'}>
         <AppWithAuth />
       </BrowserRouter>
     </QueryClientProvider>

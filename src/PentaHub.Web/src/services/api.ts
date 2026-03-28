@@ -34,7 +34,9 @@ import type {
   LoginResponse,
 } from '@/types';
 
-const api = axios.create({ baseURL: '/api' });
+const api = axios.create({
+  baseURL: import.meta.env.VITE_API_URL || '/api',
+});
 
 // Request interceptor: attach JWT token
 api.interceptors.request.use((config) => {

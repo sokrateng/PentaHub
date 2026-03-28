@@ -1,0 +1,8 @@
+{
+  "buildCommand": "cd src/PentaHub.Web && npm install && npm run build",
+  "outputDirectory": "src/PentaHub.Web/dist",
+  "framework": "vite",
+  "rewrites": [
+    { "source": "/((?!assets/).*)", "destination": "/index.html" }
+  ]
+}
